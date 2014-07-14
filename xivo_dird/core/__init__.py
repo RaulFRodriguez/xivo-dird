@@ -17,3 +17,4 @@
 
 
 from xivo_dird.core.plugin_manager import PluginManager
+from xivo_dird.core import result_formatter

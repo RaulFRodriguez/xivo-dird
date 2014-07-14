@@ -18,49 +18,64 @@
 import logging
 
 from importlib import import_module
+from collections import namedtuple
 
 logger = logging.getLogger(__name__)
 
 
+ReverseLookupResult = namedtuple('ReverseLookupResult', ['result', 'query', 'source'])
+
+
 class PluginManager(object):
+    '''
+    Some asumptions about the PluginManager
+    Plugins are used to query different directory sources
+    Header configuration is a configuration of the PluginManager
+    '''
 
     def __init__(self, config):
         logger.debug('PluginManager')
         self._config = config
+        self._plugins = {}
         self.load_all_backends()
-        self._modules = {}
-
-    def __del__(self):
-        logger.debug('Bye')
 
     def load_all_backends(self):
-        for plugin in self._get_plugins():
+        for plugin in self._get_plugin_names():
             module_name = 'xivo_dird.backends.%s' % plugin
             try:
                 module = import_module(module_name)
                 module.load()
+                self._plugins[plugin] = module
             except ImportError:
                 logger.warning('Could not find plugin %s' % module_name)
 
     def _load(self, plugin):
         module_name = 'xivo_dird.backends.%s' % plugin
         try:
-            self._modules[plugin] = import_module(module_name)
-            self._modules[plugin].load()
+            self._plugins[plugin] = import_module(module_name)
+            self._plugins[plugin].load()
         except ImportError:
             logger.warning('Could not find plugin %s' % module_name)
 
     def _unload(self, plugin):
-        if plugin not in self._modules:
+        if plugin not in self._plugins:
             return
-        self._modules[plugin].unload()
+        self._plugins[plugin].unload()
 
     def reload(self):
-        plugins = self._get_plugins()
+        plugins = self._get_plugin_names()
         for plugin in plugins:
             plugin.reload()
 
+    def reverse_lookup(self, term):
+        for plugin in self._get_plugins():
+            return ReverseLookupResult(plugin.reverse_lookup(term), term, plugin.name())
+
     def _get_plugins(self):
+        for plugin in self._plugins.itervalues():
+            yield plugin
+
+    def _get_plugin_names(self):
         if not self._config.has_section('plugins'):
             logger.debug('No plugin configured')
             return

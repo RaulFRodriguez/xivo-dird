@@ -15,34 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import cjson
 import logging
 
 logger = logging.getLogger(__name__)
 
-PLUGIN_NAME = 'Dummy'
 
-
-def load(args=None):
-    logger.debug('Loading with %s', args)
-
-
-def unload(args=None):
-    logger.debug('Unloading...')
-
-
-def reload(args=None):
-    logger.debug('Reloading')
-
-
-def lookup(term):
-    for i in xrange(100):
-        yield 'User %s' % i, str(i)
-
-
-def reverse_lookup(term):
-    logger.debug('Looking up for %s', term)
-    return 'Lol'
-
-
-def name():
-    return PLUGIN_NAME
+def format_reverse_lookup(result):
+    result = {
+        'name': result.result,
+        'number': result.query,
+        'source': result.source,
+    }
+    return cjson.encode(result)

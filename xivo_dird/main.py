@@ -19,12 +19,14 @@ import argparse
 import logging
 import os
 
+from ConfigParser import SafeConfigParser
 from flup.server.fcgi import WSGIServer
 
 from xivo.daemonize import daemon_context
 from xivo.user_rights import change_user
 from xivo.xivo_logging import setup_logging
 from xivo_dird import dird_server
+from xivo_dird import core
 
 logger = logging.getLogger(__name__)
 
@@ -35,17 +37,21 @@ _SOCKET_FILENAME = '/tmp/{daemon}.sock'.format(daemon=_DAEMONNAME)
 
 
 def main():
+    config = SafeConfigParser(allow_no_value=True)
+
     parsed_args = _parse_args()
+
+    config.read([parsed_args.config])
 
     setup_logging(_LOG_FILENAME, parsed_args.foreground, parsed_args.debug)
     if parsed_args.user:
         change_user(parsed_args.user)
 
     if parsed_args.foreground:
-        _run(parsed_args.debug)
+        _run(config, parsed_args.debug)
     else:
         with daemon_context(_PID_FILENAME):
-            _run(parsed_args.debug)
+            _run(config, parsed_args.debug)
 
 
 def _parse_args():
@@ -64,11 +70,16 @@ def _parse_args():
                         '--user',
                         action='store',
                         help='The owner of the process.')
+    parser.add_argument('-c',
+                        '--config',
+                        action='store',
+                        help='The path to the configuration file')
     return parser.parse_args()
 
 
-def _run(debug=False):
+def _run(config, debug=False):
     logger.debug('WSGIServer starting with uid %s', os.getuid())
+    dird_server.app.backend_plugin_manager = core.PluginManager(config)
     WSGIServer(dird_server.app,
                bindAddress=_SOCKET_FILENAME,
                multithreaded=False,

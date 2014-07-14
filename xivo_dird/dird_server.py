@@ -18,8 +18,9 @@
 import json
 import logging
 
-from flask import Flask
+from flask import Flask, current_app
 from flask.helpers import make_response
+from xivo_dird.core import result_formatter
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
@@ -46,4 +47,6 @@ def lookup(profile):
 @app.route('/{version}/directories/reverse_lookup'.format(version=VERSION))
 def reverse_lookup():
     logger.info('reverse lookup')
-    return make_response('', 201)
+    result = current_app.backend_plugin_manager.reverse_lookup('1001')
+    formatted_result = result_formatter.format_reverse_lookup(result)
+    return make_response(formatted_result, 201)
