@@ -38,9 +38,9 @@ class DummyPlugin(DirectorySourcePlugin):
     def reload(self, args=None):
         logger.debug('Reloading')
 
-    def lookup(self, term):
+    def lookup(self, term, args):
         for i in xrange(100):
-            yield 'User %s' % i, str(i)
+            yield '%s %s' % (args.get('name', 'User'), str(i))
 
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)

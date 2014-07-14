@@ -28,3 +28,16 @@ def format_reverse_lookup(result):
         'source': result.source,
     }
     return json.dumps(result)
+
+
+def format_lookup(source_results):
+    result = []
+    for source_result in source_results:
+        for entry in source_result.results:
+            result.append(
+                {
+                    'column_values': entry,
+                    'source': source_result.source,
+                }
+            )
+    return json.dumps(result)

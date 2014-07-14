@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 ReverseLookupResult = namedtuple('ReverseLookupResult', ['result', 'query', 'source'])
+LookupResult = namedtuple('LookupResult', ['results', 'query', 'args', 'source'])
 
 
 class PluginManager(object):
@@ -90,6 +91,16 @@ class PluginManager(object):
         for plugin in plugins:
             plugin.reload()
 
+    def lookup(self, profile, term, args):
+        results = []
+        for lookup_source in self._get_lookup_sources(profile):
+            results.append(LookupResult(lookup_source.lookup(term, args),
+                                        term,
+                                        args,
+                                        lookup_source.name()))
+
+        return results
+
     def reverse_lookup(self, term):
         for reverse_source in self._get_reverse_sources():
             return ReverseLookupResult(reverse_source.reverse_lookup(term),
@@ -99,6 +110,10 @@ class PluginManager(object):
     def _get_reverse_sources(self):
         for reverse_name in self._config.get('reverse_directories'):
             yield self._sources[reverse_name]
+
+    def _get_lookup_sources(self, profile):
+        for lookup_name in self._config.get('lookup_directories').get(profile):
+            yield self._sources[lookup_name]
 
     def _get_plugins(self):
         for plugin in self._sources.itervalues():

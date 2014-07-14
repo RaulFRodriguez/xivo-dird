@@ -42,7 +42,11 @@ def headers(profile):
 @app.route('/{version}/directories/lookup/<profile>'.format(version=VERSION))
 def lookup(profile):
     logger.info('profile {} lookup'.format(profile))
-    return make_response('', 201)
+    args = dict(request.args)
+    term = args.pop('term')
+    result = current_app.backend_plugin_manager.lookup(profile, term, args)
+    formatted_result = result_formatter.format_lookup(result)
+    return make_response(formatted_result, 200)
 
 
 @app.route('/{version}/directories/reverse_lookup'.format(version=VERSION))
@@ -56,4 +60,4 @@ def reverse_lookup():
 
     result = current_app.backend_plugin_manager.reverse_lookup(request.args['term'])
     formatted_result = result_formatter.format_reverse_lookup(result)
-    return make_response(formatted_result, 201)
+    return make_response(formatted_result, 200)
