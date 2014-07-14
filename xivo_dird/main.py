@@ -16,10 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import argparse
+import json
 import logging
 import os
 
-from ConfigParser import SafeConfigParser
 from flup.server.fcgi import WSGIServer
 
 from xivo.daemonize import daemon_context
@@ -37,13 +37,13 @@ _SOCKET_FILENAME = '/tmp/{daemon}.sock'.format(daemon=_DAEMONNAME)
 
 
 def main():
-    config = SafeConfigParser(allow_no_value=True)
-
     parsed_args = _parse_args()
 
-    config.read([parsed_args.config])
-
     setup_logging(_LOG_FILENAME, parsed_args.foreground, parsed_args.debug)
+
+    with open(parsed_args.config) as config_file:
+        config = json.load(config_file)
+
     if parsed_args.user:
         change_user(parsed_args.user)
 

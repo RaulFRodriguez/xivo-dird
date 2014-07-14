@@ -45,7 +45,7 @@ class PluginManager(object):
     def load_plugin_configurations(self):
         paths = []
 
-        for dir_path, _, file_names in os.walk(self._config.get('general', 'plugin_config_dir')):
+        for dir_path, _, file_names in os.walk(self._config.get('plugin_config_dir')):
             for file_name in file_names:
                 paths.append(os.path.join(dir_path, file_name))
 
@@ -99,9 +99,9 @@ class PluginManager(object):
             yield plugin
 
     def _get_plugin_names(self):
-        if not self._config.has_section('plugins'):
+        if 'plugins' not in self._config:
             logger.debug('No plugin configured')
             return
 
-        for plugin in self._config.options('plugins'):
+        for plugin in self._config.get('plugins'):
             yield plugin
