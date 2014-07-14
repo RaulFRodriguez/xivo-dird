@@ -16,12 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+import random
+import time
 
 from xivo_dird.backends.directory_source_plugin import DirectorySourcePlugin
 
 logger = logging.getLogger(__name__)
-
-PLUGIN_NAME = 'Dummy'
 
 
 class DummyPlugin(DirectorySourcePlugin):
@@ -44,10 +44,11 @@ class DummyPlugin(DirectorySourcePlugin):
 
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
+        time.sleep(random.random())
         return self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
 
     def name(self):
-        return PLUGIN_NAME
+        return self._config.get('name')
 
 
 Klass = DummyPlugin

@@ -38,7 +38,7 @@ class PluginManager(object):
     def __init__(self, config):
         logger.debug('PluginManager')
         self._config = config
-        self._plugins = {}
+        self._sources = {}
         plugin_configurations = self.load_plugin_configurations()
         self.load_all_backends(plugin_configurations)
 
@@ -68,22 +68,22 @@ class PluginManager(object):
                 for plugin_configuration in plugin_configurations[plugin_name]:
                     instance = module.Klass(plugin_configuration)
                     instance.load()
-                self._plugins[instance.name()] = instance
+                    self._sources[instance.name()] = instance
             except ImportError:
                 logger.exception('Could not find plugin %s' % module_name)
 
     def _load(self, plugin):
         module_name = 'xivo_dird.backends.%s' % plugin
         try:
-            self._plugins[plugin] = import_module(module_name)
-            self._plugins[plugin].load()
+            self._sources[plugin] = import_module(module_name)
+            self._sources[plugin].load()
         except ImportError:
             logger.warning('Could not find plugin %s' % module_name)
 
     def _unload(self, plugin):
-        if plugin not in self._plugins:
+        if plugin not in self._sources:
             return
-        self._plugins[plugin].unload()
+        self._sources[plugin].unload()
 
     def reload(self):
         plugins = self._get_plugin_names()
@@ -91,11 +91,17 @@ class PluginManager(object):
             plugin.reload()
 
     def reverse_lookup(self, term):
-        for plugin in self._get_plugins():
-            return ReverseLookupResult(plugin.reverse_lookup(term), term, plugin.name())
+        for reverse_source in self._get_reverse_sources():
+            return ReverseLookupResult(reverse_source.reverse_lookup(term),
+                                       term,
+                                       reverse_source.name())
+
+    def _get_reverse_sources(self):
+        for reverse_name in self._config.get('reverse_directories'):
+            yield self._sources[reverse_name]
 
     def _get_plugins(self):
-        for plugin in self._plugins.itervalues():
+        for plugin in self._sources.itervalues():
             yield plugin
 
     def _get_plugin_names(self):
