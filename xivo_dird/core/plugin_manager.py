@@ -15,10 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import os
 import logging
+import json
 
 from importlib import import_module
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -37,17 +39,38 @@ class PluginManager(object):
         logger.debug('PluginManager')
         self._config = config
         self._plugins = {}
-        self.load_all_backends()
+        plugin_configurations = self.load_plugin_configurations()
+        self.load_all_backends(plugin_configurations)
 
-    def load_all_backends(self):
-        for plugin in self._get_plugin_names():
-            module_name = 'xivo_dird.backends.%s' % plugin
+    def load_plugin_configurations(self):
+        paths = []
+
+        for dir_path, _, file_names in os.walk(self._config.get('general', 'plugin_config_dir')):
+            for file_name in file_names:
+                paths.append(os.path.join(dir_path, file_name))
+
+        result = defaultdict(list)
+
+        for path in paths:
+            with open(path) as f:
+                raw_content = f.read()
+                content = json.loads(raw_content)
+                result[content['type']].append(content)
+
+        return result
+
+    def load_all_backends(self, plugin_configurations):
+        for plugin_name in self._get_plugin_names():
+            module_name = 'xivo_dird.backends.%s' % plugin_name
             try:
+                logger.debug('Loading module %s', module_name)
                 module = import_module(module_name)
-                module.load()
-                self._plugins[plugin] = module
+                for plugin_configuration in plugin_configurations[plugin_name]:
+                    instance = module.Klass(plugin_configuration)
+                    instance.load()
+                self._plugins[instance.name()] = instance
             except ImportError:
-                logger.warning('Could not find plugin %s' % module_name)
+                logger.exception('Could not find plugin %s' % module_name)
 
     def _load(self, plugin):
         module_name = 'xivo_dird.backends.%s' % plugin

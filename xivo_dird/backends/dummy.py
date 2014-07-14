@@ -17,32 +17,37 @@
 
 import logging
 
+from xivo_dird.backends.directory_source_plugin import DirectorySourcePlugin
+
 logger = logging.getLogger(__name__)
 
 PLUGIN_NAME = 'Dummy'
 
 
-def load(args=None):
-    logger.debug('Loading with %s', args)
+class DummyPlugin(DirectorySourcePlugin):
+
+    def __init__(self, config):
+        self._config = config
+
+    def load(self, args=None):
+        logger.debug('Loading with %s', args)
+
+    def unload(self, args=None):
+        logger.debug('Unloading...')
+
+    def reload(self, args=None):
+        logger.debug('Reloading')
+
+    def lookup(self, term):
+        for i in xrange(100):
+            yield 'User %s' % i, str(i)
+
+    def reverse_lookup(self, term):
+        logger.debug('Looking up for %s', term)
+        return self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
+
+    def name(self):
+        return PLUGIN_NAME
 
 
-def unload(args=None):
-    logger.debug('Unloading...')
-
-
-def reload(args=None):
-    logger.debug('Reloading')
-
-
-def lookup(term):
-    for i in xrange(100):
-        yield 'User %s' % i, str(i)
-
-
-def reverse_lookup(term):
-    logger.debug('Looking up for %s', term)
-    return 'Lol'
-
-
-def name():
-    return PLUGIN_NAME
+Klass = DummyPlugin
