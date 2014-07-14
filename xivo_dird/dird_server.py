@@ -17,8 +17,9 @@
 
 import json
 import logging
+import time
 
-from flask import Flask, current_app
+from flask import Flask, current_app, request
 from flask.helpers import make_response
 from xivo_dird.core import result_formatter
 
@@ -47,6 +48,12 @@ def lookup(profile):
 @app.route('/{version}/directories/reverse_lookup'.format(version=VERSION))
 def reverse_lookup():
     logger.info('reverse lookup')
-    result = current_app.backend_plugin_manager.reverse_lookup('1001')
+
+    if 'term' not in request.args:
+        return make_response(json.dumps({'reasons': ['term is missing'],
+                                         'timestamp': [time.time()],
+                                         'status_code': 400}), 400)
+
+    result = current_app.backend_plugin_manager.reverse_lookup(request.args['term'])
     formatted_result = result_formatter.format_reverse_lookup(result)
     return make_response(formatted_result, 201)
