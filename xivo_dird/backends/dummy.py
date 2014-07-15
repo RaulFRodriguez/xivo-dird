@@ -40,7 +40,7 @@ class DummyPlugin(DirectorySourcePlugin):
 
     def lookup(self, term, args):
         for i in xrange(100):
-            yield '%s %s' % (args.get('name', 'User'), str(i))
+            yield '%s %s' % (args.get('name', ['User'])[0], str(i))
 
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
