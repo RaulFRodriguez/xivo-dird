@@ -25,7 +25,7 @@ class DirectorySourceHandle(object):
             q.put(None)
         return q
 
-    def lookup(self, profile, term, args):
+    def lookup(self, term, args):
         q = Queue.Queue()
         results = self._source.lookup(term, args)
         q. put(results)

@@ -77,7 +77,7 @@ class PluginManager(object):
 
     def _setup_plugin_handle(self, plugin_class, source_configuration):
         handle = DirectorySourceHandle(plugin_class, source_configuration)
-        return handle.source_name(), handle
+        return handle.name(), handle
 
     def lookup(self, profile, term, args):
         results = []
