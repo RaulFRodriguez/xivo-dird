@@ -17,4 +17,38 @@
 
 
 class DirectorySourcePlugin(object):
-    pass
+    '''
+    This is the base class of a backend plugin. Each instance of these plugins
+    is references to as a source.
+
+    A variable named "Klass" should be defined in the module's global scope
+    and the plugin class should be assigned to it.
+    '''
+
+    def load(self, args=None):
+        '''
+        Bootstrap the plugin instance and acquire ressources that are required
+        by the plugin instance to work properly
+        '''
+
+    def unload(self, args=None):
+        '''
+        Cleanup function that is called before the plugin instance is deleted
+        '''
+
+    def name(self):
+        '''
+        Returns the name of this plugin instance
+        '''
+        if hasattr(self, '_config'):
+            return self._config.get('name')
+
+    def lookup(self, term, args):
+        '''
+        Returns a list of lookup result
+        '''
+
+    def reverse_lookup(self, term):
+        '''
+        Finds a name based on a number
+        '''

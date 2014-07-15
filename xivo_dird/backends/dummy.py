@@ -35,9 +35,6 @@ class DummyPlugin(DirectorySourcePlugin):
     def unload(self, args=None):
         logger.debug('Unloading...')
 
-    def reload(self, args=None):
-        logger.debug('Reloading')
-
     def lookup(self, term, args):
         for i in xrange(100):
             yield '%s %s' % (args.get('name', ['User'])[0], str(i))
@@ -46,9 +43,6 @@ class DummyPlugin(DirectorySourcePlugin):
         logger.debug('Looking up for %s', term)
         time.sleep(random.random())
         return self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
-
-    def name(self):
-        return self._config.get('name')
 
 
 Klass = DummyPlugin

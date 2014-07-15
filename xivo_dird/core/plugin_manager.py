@@ -86,11 +86,6 @@ class PluginManager(object):
             return
         self._sources[plugin].unload()
 
-    def reload(self):
-        plugins = self._get_plugin_names()
-        for plugin in plugins:
-            plugin.reload()
-
     def lookup(self, profile, term, args):
         results = []
         for lookup_source in self._get_lookup_sources(profile):
