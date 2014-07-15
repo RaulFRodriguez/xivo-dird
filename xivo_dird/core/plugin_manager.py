@@ -21,6 +21,7 @@ import json
 
 from importlib import import_module
 from collections import namedtuple, defaultdict
+from xivo_dird.core.directory_source_handle import DirectorySourceHandle
 
 logger = logging.getLogger(__name__)
 
@@ -66,25 +67,17 @@ class PluginManager(object):
             try:
                 logger.debug('Loading module %s', module_name)
                 module = import_module(module_name)
-                for plugin_configuration in plugin_configurations[plugin_name]:
-                    instance = module.Klass(plugin_configuration)
-                    instance.load()
-                    self._sources[instance.name()] = instance
+                for source_configuration in plugin_configurations[plugin_name]:
+                    name, handle = self._setup_plugin_handle(module.Klass, source_configuration)
+                    # instance = module.Klass(plugin_configuration)
+                    # instance.load()
+                    self._sources[name] = handle
             except ImportError:
                 logger.exception('Could not find plugin %s' % module_name)
 
-    def _load(self, plugin):
-        module_name = 'xivo_dird.backends.%s' % plugin
-        try:
-            self._sources[plugin] = import_module(module_name)
-            self._sources[plugin].load()
-        except ImportError:
-            logger.warning('Could not find plugin %s' % module_name)
-
-    def _unload(self, plugin):
-        if plugin not in self._sources:
-            return
-        self._sources[plugin].unload()
+    def _setup_plugin_handle(self, plugin_class, source_configuration):
+        handle = DirectorySourceHandle(plugin_class, source_configuration)
+        return handle.source_name(), handle
 
     def lookup(self, profile, term, args):
         results = []
@@ -97,10 +90,25 @@ class PluginManager(object):
         return results
 
     def reverse_lookup(self, term):
+        queues, name = [], None
         for reverse_source in self._get_reverse_sources():
-            return ReverseLookupResult(reverse_source.reverse_lookup(term),
-                                       term,
-                                       reverse_source.name())
+            queues.append(reverse_source.reverse_lookup(term))
+
+        # Return when the first not None result is found
+        while True:
+            to_remove = []
+            for q in queues:
+                if not q.empty():
+                    result = q.get_nowait()
+                    if result:
+                        name = q.name
+                        break
+                    to_remove.append(q)
+
+            for q in to_remove:
+                queues.remove(q)
+
+        return ReverseLookupResult(result, term, name)
 
     def _get_reverse_sources(self):
         for reverse_name in self._config.get('reverse_directories'):
