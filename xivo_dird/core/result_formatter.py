@@ -15,19 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 def format_reverse_lookup(result):
-    result = {
+    return {
         'name': result.result,
         'number': result.query,
         'source': result.source,
     }
-    return json.dumps(result)
 
 
 def format_lookup(source_results):
@@ -40,4 +38,4 @@ def format_lookup(source_results):
                     'source': source_result.source,
                 }
             )
-    return json.dumps(result)
+    return result

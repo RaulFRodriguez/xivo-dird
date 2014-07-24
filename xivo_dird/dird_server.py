@@ -32,7 +32,7 @@ VERSION = 0.1
 @app.route('/{version}/directories/lookup/<profile>/headers'.format(version=VERSION))
 def headers(profile):
     logger.info('profile {} headers'.format(profile))
-    dummy = json.dumps(
+    dummy = _encode_json(
         {'column_headers': ['Firstname', 'Lastname', 'Phone number'],
          'column_types': [None, None, 'office']}
     )
@@ -46,7 +46,7 @@ def lookup(profile):
     term = args.pop('term')
     result = current_app.backend_plugin_manager.lookup(profile, term, args)
     formatted_result = result_formatter.format_lookup(result)
-    return make_response(formatted_result, 200)
+    return make_response(_encode_json(formatted_result), 200)
 
 
 @app.route('/{version}/directories/reverse_lookup'.format(version=VERSION))
@@ -54,10 +54,14 @@ def reverse_lookup():
     logger.info('reverse lookup')
 
     if 'term' not in request.args:
-        return make_response(json.dumps({'reasons': ['term is missing'],
-                                         'timestamp': [time.time()],
-                                         'status_code': 400}), 400)
+        return make_response(_encode_json({'reasons': ['term is missing'],
+                                           'timestamp': [time.time()],
+                                           'status_code': 400}), 400)
 
     result = current_app.backend_plugin_manager.reverse_lookup(request.args['term'])
     formatted_result = result_formatter.format_reverse_lookup(result)
-    return make_response(formatted_result, 200)
+    return make_response(_encode_json(formatted_result), 200)
+
+
+def _encode_json(data):
+    return json.dumps(data, sort_keys=True, indent=4) + '\n'
