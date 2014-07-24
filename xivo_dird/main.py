@@ -83,7 +83,7 @@ def _run(config, debug=False):
     plugin_manager.start()
     WSGIServer(dird_server.app,
                bindAddress=_SOCKET_FILENAME,
-               multithreaded=False,
-               multiprocess=True,
+               multithreaded=True,
+               multiprocess=False,
                debug=debug).run()
     plugin_manager.stop()
