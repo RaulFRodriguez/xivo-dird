@@ -95,14 +95,14 @@ class PluginManager(object):
             queues.append(reverse_source.reverse_lookup(term))
 
         # Return when the first not None result is found
-        while True:
+        name = result = None
+        while queues and not result:
             to_remove = []
             for q in queues:
                 if not q.empty():
                     result = q.get_nowait()
                     if result:
                         name = q.name
-                        break
                     to_remove.append(q)
 
             for q in to_remove:
