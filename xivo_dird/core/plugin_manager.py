@@ -19,9 +19,10 @@ import os
 import logging
 import json
 
+from asyncthreads.reactor import Reactor
+from asyncthreads.threadpool import ThreadPool
 from importlib import import_module
 from collections import namedtuple, defaultdict
-from xivo_dird.core.directory_source_handle import DirectorySourceHandle
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,13 @@ class PluginManager(object):
         self._sources = {}
         plugin_configurations = self.load_plugin_configurations()
         self.load_all_backends(plugin_configurations)
+        self._reactor = Reactor(ThreadPool(1, 10))
+
+    def start(self):
+        self._reactor.start()
+
+    def stop(self):
+        self._reactor.shutdown()
 
     def load_plugin_configurations(self):
         paths = []
@@ -76,8 +84,8 @@ class PluginManager(object):
                 logger.exception('Could not find plugin %s' % module_name)
 
     def _setup_plugin_handle(self, plugin_class, source_configuration):
-        handle = DirectorySourceHandle(plugin_class, source_configuration)
-        return handle.name(), handle
+        source = plugin_class(source_configuration)
+        return source.name(), source
 
     def lookup(self, profile, term, args):
         results = []
@@ -90,23 +98,28 @@ class PluginManager(object):
         return results
 
     def reverse_lookup(self, term):
-        queues, name = [], None
+        pending_futures = set()
         for reverse_source in self._get_reverse_sources():
-            queues.append(reverse_source.reverse_lookup(term))
+            name = reverse_source.name()
+            future = self._reactor.call_in_thread(reverse_source.reverse_lookup, term)
+            pending_futures.add((name, future))
 
         # Return when the first not None result is found
         name = result = None
-        while queues and not result:
-            to_remove = []
-            for q in queues:
-                if not q.empty():
-                    result = q.get_nowait()
+        while pending_futures and not result:
+            to_remove = set()
+            presents = ((name, future) for (name, future) in pending_futures if future.done())
+            for (source_name, present) in presents:
+                if present.successful():
+                    result = present.result()
                     if result:
-                        name = q.name
-                    to_remove.append(q)
+                        name = source_name
+                        break
+                    to_remove.add((source_name, present))
 
-            for q in to_remove:
-                queues.remove(q)
+            pending_futures -= to_remove
+
+        logger.debug('Plugin {} won the reverse lookup'.format(name))
 
         return ReverseLookupResult(result, term, name)
 

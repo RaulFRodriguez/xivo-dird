@@ -79,9 +79,11 @@ def _parse_args():
 
 def _run(config, debug=False):
     logger.debug('WSGIServer starting with uid %s', os.getuid())
-    dird_server.app.backend_plugin_manager = core.PluginManager(config)
+    plugin_manager = dird_server.app.backend_plugin_manager = core.PluginManager(config)
+    plugin_manager.start()
     WSGIServer(dird_server.app,
                bindAddress=_SOCKET_FILENAME,
                multithreaded=False,
                multiprocess=True,
                debug=debug).run()
+    plugin_manager.stop()
