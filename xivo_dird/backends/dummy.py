@@ -36,6 +36,7 @@ class DummyPlugin(DirectorySourcePlugin):
         logger.debug('Unloading...')
 
     def lookup(self, term, args):
+        logger.debug('Looking up for %s', term)
         for i in xrange(100):
             yield '%s %s' % (args.get('name', ['User'])[0], str(i))
 
