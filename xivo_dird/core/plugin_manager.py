@@ -101,17 +101,15 @@ class PluginManager(object):
         # Return when the first not None result is found
         name = result = None
         while pending_futures and not result:
-            to_remove = set()
-            presents = ((name, future) for (name, future) in pending_futures if future.done())
+            presents = set((name, future) for (name, future) in pending_futures if future.done())
             for (source_name, present) in presents:
                 if present.successful():
                     result = present.result()
                     if result:
                         name = source_name
                         break
-                    to_remove.add((source_name, present))
 
-            pending_futures -= to_remove
+            pending_futures -= presents
 
         logger.debug('Plugin {} won the reverse lookup'.format(name))
 
