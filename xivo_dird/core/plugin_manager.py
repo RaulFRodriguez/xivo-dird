@@ -19,8 +19,7 @@ import os
 import logging
 import json
 
-from asyncthreads.reactor import Reactor
-from asyncthreads.threadpool import ThreadPool
+from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
 from collections import namedtuple, defaultdict
 
@@ -44,13 +43,12 @@ class PluginManager(object):
         self._sources = {}
         plugin_configurations = self.load_plugin_configurations()
         self.load_all_backends(plugin_configurations)
-        self._reactor = Reactor(ThreadPool(1, 10))
 
     def start(self):
-        self._reactor.start()
+        self._executor = ThreadPoolExecutor(max_workers=10)
 
     def stop(self):
-        self._reactor.shutdown()
+        self._executor.shutdown()
 
     def load_plugin_configurations(self):
         paths = []
@@ -85,20 +83,17 @@ class PluginManager(object):
         pending_futures = set()
         for lookup_source in self._get_lookup_sources(profile):
             name = lookup_source.name()
-            future = self._reactor.call_in_thread(lookup_source.lookup, (term, args))
+            future = self._executor.submit(lookup_source.lookup, term, args)
             pending_futures.add((name, future))
 
         results = []
         while pending_futures:
             presents = set((name, future) for (name, future) in pending_futures if future.done())
             for (source_name, present) in presents:
-                if present.successful():
-                    results.append(LookupResult(present.result(),
-                                                term,
-                                                args,
-                                                name))
-                else:
-                    logger.exception(present.traceback())
+                try:
+                    results.append(LookupResult(present.result(), term, args, name))
+                except Exception as e:
+                    logger.exception(e)
 
             pending_futures -= presents
 
@@ -108,7 +103,7 @@ class PluginManager(object):
         pending_futures = set()
         for reverse_source in self._get_reverse_sources():
             name = reverse_source.name()
-            future = self._reactor.call_in_thread(reverse_source.reverse_lookup, term)
+            future = self._executor.submit(reverse_source.reverse_lookup, term)
             pending_futures.add((name, future))
 
         # Return when the first not None result is found
@@ -116,11 +111,13 @@ class PluginManager(object):
         while pending_futures and not result:
             presents = set((name, future) for (name, future) in pending_futures if future.done())
             for (source_name, present) in presents:
-                if present.successful():
+                try:
                     result = present.result()
                     if result:
                         name = source_name
                         break
+                except Exception as e:
+                    logger.exception(e)
 
             pending_futures -= presents
 
