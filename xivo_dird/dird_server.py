@@ -42,9 +42,8 @@ def headers(profile):
 @app.route('/{version}/directories/lookup/<profile>'.format(version=VERSION))
 def lookup(profile):
     logger.info('profile {} lookup'.format(profile))
-    args = dict(request.args)
-    term = args.pop('term')
-    result = current_app.backend_plugin_manager.lookup(profile, term, args)
+    term = request.args['term']
+    result = current_app.backend_plugin_manager.lookup(profile, term, request.args)
     formatted_result = result_formatter.format_lookup(result)
     return make_response(_encode_json(formatted_result), 200)
 
