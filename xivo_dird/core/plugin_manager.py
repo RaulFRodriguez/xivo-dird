@@ -76,16 +76,10 @@ class PluginManager(object):
                 logger.debug('Loading module %s', module_name)
                 module = import_module(module_name)
                 for source_configuration in plugin_configurations[plugin_name]:
-                    name, handle = self._setup_plugin_handle(module.Klass, source_configuration)
-                    # instance = module.Klass(plugin_configuration)
-                    # instance.load()
-                    self._sources[name] = handle
+                    source = module.Klass(source_configuration)
+                    self._sources[source.name()] = source
             except ImportError:
                 logger.exception('Could not find plugin %s' % module_name)
-
-    def _setup_plugin_handle(self, plugin_class, source_configuration):
-        source = plugin_class(source_configuration)
-        return source.name(), source
 
     def lookup(self, profile, term, args):
         results = []
