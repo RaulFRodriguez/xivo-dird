@@ -39,13 +39,13 @@ _SOCKET_FILENAME = '/tmp/{daemon}.sock'.format(daemon=_DAEMONNAME)
 def main():
     parsed_args = _parse_args()
 
+    if parsed_args.user:
+        change_user(parsed_args.user)
+
     setup_logging(_LOG_FILENAME, parsed_args.foreground, parsed_args.debug)
 
     with open(parsed_args.config) as config_file:
         config = json.load(config_file)
-
-    if parsed_args.user:
-        change_user(parsed_args.user)
 
     if parsed_args.foreground:
         _run(config, parsed_args.debug)
