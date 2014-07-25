@@ -82,12 +82,25 @@ class PluginManager(object):
                 logger.exception('Could not find plugin %s' % module_name)
 
     def lookup(self, profile, term, args):
-        results = []
+        pending_futures = set()
         for lookup_source in self._get_lookup_sources(profile):
-            results.append(LookupResult(lookup_source.lookup(term, args),
-                                        term,
-                                        args,
-                                        lookup_source.name()))
+            name = lookup_source.name()
+            future = self._reactor.call_in_thread(lookup_source.lookup, (term, args))
+            pending_futures.add((name, future))
+
+        results = []
+        while pending_futures:
+            presents = set((name, future) for (name, future) in pending_futures if future.done())
+            for (source_name, present) in presents:
+                if present.successful():
+                    results.append(LookupResult(present.result(),
+                                                term,
+                                                args,
+                                                name))
+                else:
+                    logger.exception(present.traceback())
+
+            pending_futures -= presents
 
         return results
 
