@@ -22,7 +22,7 @@ import os
 
 from flup.server.fcgi import WSGIServer
 
-from xivo.daemonize import daemon_context
+from xivo.daemonize import pidfile_context
 from xivo.user_rights import change_user
 from xivo.xivo_logging import setup_logging
 from xivo_dird import dird_server
@@ -48,11 +48,8 @@ def main():
     with open(parsed_args.config) as config_file:
         config = json.load(config_file)
 
-    if parsed_args.foreground:
+    with pidfile_context(_PID_FILENAME, parsed_args.foreground):
         _run(config, parsed_args.debug)
-    else:
-        with daemon_context(_PID_FILENAME):
-            _run(config, parsed_args.debug)
 
 
 def _parse_args():
