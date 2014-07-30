@@ -34,6 +34,7 @@ _DAEMONNAME = 'xivo-dird'
 _LOG_FILENAME = '/var/log/{}.log'.format(_DAEMONNAME)
 _PID_FILENAME = '/var/run/{daemon}/{daemon}.pid'.format(daemon=_DAEMONNAME)
 _SOCKET_FILENAME = '/tmp/{daemon}.sock'.format(daemon=_DAEMONNAME)
+_DEFAULT_CONFIG_FILENAME = '/etc/xivo/xivo-dird/xivo-dird.conf'
 
 
 def main():
@@ -72,6 +73,7 @@ def _parse_args():
                         help='The owner of the process.')
     parser.add_argument('-c',
                         '--config',
+                        default=_DEFAULT_CONFIG_FILENAME,
                         action='store',
                         help='The path to the configuration file')
     return parser.parse_args()
