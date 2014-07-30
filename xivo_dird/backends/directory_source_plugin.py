@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import abc
+
 
 class DirectorySourcePlugin(object):
     '''
@@ -24,6 +26,7 @@ class DirectorySourcePlugin(object):
     A variable named "Klass" should be defined in the module's global scope
     and the plugin class should be assigned to it.
     '''
+    __metaclass__ = abc.ABCMeta
 
     def load(self, args=None):
         '''
@@ -43,11 +46,13 @@ class DirectorySourcePlugin(object):
         if hasattr(self, '_config'):
             return self._config.get('name')
 
+    @abc.abstractmethod
     def lookup(self, term, args):
         '''
         Returns a list of lookup result
         '''
 
+    @abc.abstractmethod
     def reverse_lookup(self, term):
         '''
         Finds a name based on a number
