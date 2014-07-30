@@ -22,6 +22,12 @@ RUN apt-get -qq -y install \
 ADD xivo-dird-service /root/xivo-dird-service
 RUN chmod +x /root/xivo-dird-service
 
+# Set password
+RUN echo "root:xivo" | chpasswd
+
+# Clean
+RUN apt-get clean
+
 CMD /root/xivo-dird-service
 
 ## Image to build from sources
@@ -55,8 +61,8 @@ RUN apt-get -qq -y install \
     xivo-lib-python
 
 # Install xivo-dird
-RUN git clone "git://github.com/xivo-pbx/xivo-dird"
 WORKDIR xivo-dird
+RUN git clone "git://github.com/xivo-pbx/xivo-dird"
 RUN git checkout -t origin/async-plugin
 RUN pip install -r requirements.txt
 RUN python setup.py install
@@ -74,5 +80,11 @@ RUN cp examples/xivo-dird.nginx /etc/nginx/sites-available/xivo-dird
 # Add script to run services
 ADD xivo-dird-service /root/xivo-dird-service
 RUN chmod +x /root/xivo-dird-service
+
+# Set password
+RUN echo "root:xivo" | chpasswd
+
+# Clean
+RUN apt-get clean
 
 CMD /root/xivo-dird-service
