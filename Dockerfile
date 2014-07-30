@@ -61,8 +61,9 @@ RUN apt-get -qq -y install \
     xivo-lib-python
 
 # Install xivo-dird
-WORKDIR xivo-dird
+WORKDIR /root
 RUN git clone "git://github.com/xivo-pbx/xivo-dird"
+WORKDIR xivo-dird
 RUN git checkout -t origin/async-plugin
 RUN pip install -r requirements.txt
 RUN python setup.py install
