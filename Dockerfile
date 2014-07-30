@@ -29,5 +29,6 @@ RUN cp -a examples/xivo-dird.conf examples/plugins.d /etc/xivo/xivo-dird
 # configure nginx
 RUN cp examples/xivo-dird.nginx /etc/nginx/sites-available/xivo-dird
 RUN service nginx reload
+WORKDIR /root
 
 CMD xivo-dird -f -u www-data
