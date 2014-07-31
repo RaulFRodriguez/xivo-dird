@@ -28,6 +28,8 @@ RUN echo "root:xivo" | chpasswd
 # Clean
 RUN apt-get clean
 
+EXPOSE 50060
+
 CMD /root/xivo-dird-service
 
 ## Image to build from sources
@@ -88,5 +90,7 @@ RUN echo "root:xivo" | chpasswd
 
 # Clean
 RUN apt-get clean
+
+EXPOSE 50060
 
 CMD /root/xivo-dird-service
