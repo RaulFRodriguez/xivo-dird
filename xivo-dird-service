@@ -12,4 +12,4 @@ function start {
 
 # Launching xivo-dird
 start
-xivo-dird -f -u www-data
+xivo-dird -d -f -u www-data
