@@ -58,7 +58,8 @@ RUN apt-get -qq -y install \
     libldap2-dev \
     nginx \
     xivo-config \
-    xivo-lib-python
+    xivo-lib-python \
+    net-tools
 
 # Install xivo-dird
 WORKDIR /root
