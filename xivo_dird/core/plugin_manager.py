@@ -19,7 +19,7 @@ import os
 import logging
 import json
 
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, FIRST_COMPLETED
 from importlib import import_module
 from collections import namedtuple, defaultdict
 
@@ -86,16 +86,13 @@ class PluginManager(object):
             future = self._executor.submit(lookup_source.lookup, term, args)
             pending_futures.add((name, future))
 
+        # Return when the first not None result is found
+        fs = [pending_future[1] for pending_future in pending_futures]
+        presents, _ = wait(fs, return_when=ALL_COMPLETED)
         results = []
-        while pending_futures:
-            presents = set((name, future) for (name, future) in pending_futures if future.done())
-            for (source_name, present) in presents:
-                try:
-                    results.append(LookupResult(present.result(), term, args, name))
-                except Exception as e:
-                    logger.exception(e)
-
-            pending_futures -= presents
+        for present in presents:
+            name = [pend[0] for pend in pending_futures if pend[1] == present][0]
+            results.append(LookupResult(present.result(), term, args, name))
 
         return results
 
@@ -110,8 +107,11 @@ class PluginManager(object):
         fs = [pending_future[1] for pending_future in pending_futures]
         presents, _ = wait(fs, return_when=FIRST_COMPLETED)
         p = presents.pop()
-        n = [pend[0] for pend in pending_futures if pend[1] == p][0]
-        return ReverseLookupResult(p.result(), term, n)
+        try:
+            n = [pend[0] for pend in pending_futures if pend[1] == p][0]
+            return ReverseLookupResult(p.result(), term, n)
+        except IndexError:
+            return None
 
     def _get_reverse_sources(self):
         for reverse_name in self._config.get('reverse_directories'):
