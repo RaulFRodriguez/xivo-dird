@@ -1,0 +1,2 @@
+resource_registry:
+  XiVO::DIRD::Server: https://raw.githubusercontent.com/xivo-pbx/xivo-dird/async-plugin/contribs/openstack/instances.yaml 

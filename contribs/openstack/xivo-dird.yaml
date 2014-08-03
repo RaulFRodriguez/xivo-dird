@@ -41,7 +41,7 @@ resources:
       min_size: 1
       max_size: 3
       resource: 
-        type: https://raw.githubusercontent.com/xivo-pbx/xivo-dird/async-plugin/contribs/openstack/instances.yaml
+        type: XiVO::DIRD::Server
         properties:
           image: {get_param: image_id}
           flavor: {get_param: flavor_type}
