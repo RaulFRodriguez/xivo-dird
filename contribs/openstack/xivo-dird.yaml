@@ -48,8 +48,7 @@ resources:
           key_name: {get_param: key_name}
           pool_id: {get_resource: pool}
           metadata: {"metering.stack": {get_param: "OS::stack_id"}}
-          networks:
-            - network: {get_param: net_id}
+          net_id: {get_param: net_id}
           user_data: |
             #!/bin/bash
             echo "deb http://mirror.xivo.io/debian/ xivo-dev main" >> /etc/apt/sources.list
