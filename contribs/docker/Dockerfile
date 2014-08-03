@@ -41,7 +41,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
 
 # Add xivo mirror
-RUN echo "deb http://mirror.xivo.io/debian/ xivo-five main" >> /etc/apt/sources.list
+RUN echo "deb http://mirror.xivo.io/debian/ xivo-dev main" >> /etc/apt/sources.list
 ADD http://mirror.xivo.io/xivo_current.key /tmp/
 RUN apt-key add /tmp/xivo_current.key
 RUN rm /tmp/xivo_current.key
@@ -76,6 +76,8 @@ RUN touch /var/log/xivo-dird.log
 RUN chown www-data: /var/log/xivo-dird.log
 RUN cp debian/xivo-dird.init /etc/init.d/xivo-dird
 RUN mkdir /etc/xivo/xivo-dird
+RUN mkdir /var/run/xivo-dird
+RUN chown www-data: /var/run/xivo-dird
 RUN cp -a examples/xivo-dird.conf examples/plugins.d /etc/xivo/xivo-dird
 
 # Configure nginx

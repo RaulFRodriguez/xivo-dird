@@ -1,0 +1,139 @@
+heat_template_version: 2013-05-23
+
+description: Template to deploy a single compute instance xivo-dird
+
+parameters:
+  key_name:
+    description: Name of key-pair to be used for compute instance
+    type: string
+    label: Key Name
+    default: Sylvain
+  image_id:
+    description: Image to be used for compute instance (debian 7 is necessary)
+    type: string
+    label: Image ID
+    default: Debian 7.5 i386
+  net_id:
+    description: Network for the instance
+    type: string
+    label: Network ID
+    default: VLAN 413
+  sub_id:
+    description: Subnet for LB VIP
+    type: string
+    label: Subnet ID
+    default: 1f6d4e9d-bbb6-4239-899a-e380dcdf2e55
+  flavor_type:
+    description: Type of instance (flavor) to be used
+    type: string
+    label: Flavor Type
+    constraints:
+      - allowed_values: [m1.tiny, m1.small]
+        description: Value must be one of m1.tiny or m1.small 
+  pool_id:
+    description: Pool to contact
+    type: string
+
+resources:
+  xivo_dird_instance:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      min_size: 1
+      max_size: 3
+      resource: 
+        type: instances.yaml
+        properties:
+          image: {get_param: image_id}
+          flavor: {get_param: flavor_type}
+          key_name: {get_param: key_name}
+          pool_id: {get_resource: pool}
+          networks: 
+            - network: {get_param: net_id}
+          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
+          user_data: |
+            #!/bin/bash
+            echo "deb http://mirror.xivo.io/debian/ xivo-dev main" >> /etc/apt/sources.list
+            wget http://mirror.xivo.io/xivo_current.key -O - | apt-key add -
+            apt-get update
+            apt-get -qq -y install wget apt-utils python-pip git ssh libpq-dev python-dev libsasl2-dev libldap2-dev nginx xivo-config xivo-lib-python net-tools
+            cd /root
+            git clone git://github.com/xivo-pbx/xivo-dird
+            cd xivo-dird
+            git checkout -t origin/async-plugin
+            pip install -r requirements.txt
+            python setup.py install
+            touch /var/log/xivo-dird.log
+            cp debian/xivo-dird.init /etc/init.d/xivo-dird
+            mkdir /etc/xivo/xivo-dird
+            mkdir /var/run/xivo-dird/
+            chown www-data /var/run/xivo-dird/
+            chown www-data /var/log/xivo-dird.log
+            cp -a examples/xivo-dird.conf examples/plugins.d /etc/xivo/xivo-dird
+            cp examples/xivo-dird.nginx /etc/nginx/sites-available/xivo-dird
+            service nginx restart
+            apt-get clean
+            /usr/local/bin/xivo-dird -u www-data
+  xivo_dird_scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: xivo_dird_instance}
+      cooldown: 60
+      scaling_adjustment: 1
+  xivo_dird_scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: xivo_dird_instance}
+      cooldown: 60
+      scaling_adjustment: -1
+  cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 1 minute
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [xivo_dird_scaleup_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+  cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 10 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 15
+      alarm_actions:
+        - {get_attr: [xivo_dird_scaledown_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt
+  monitor:
+    type: OS::Neutron::HealthMonitor
+    properties:
+      type: HTTP
+      delay: 5
+      max_retries: 3
+      timeout: 5
+      url_path: /0.1/directories/reverse_lookup?term=toto
+      expected_codes: "200"
+  pool:
+    type: OS::Neutron::Pool
+    properties:
+      description: Loadbalancer for xivo-dird
+      protocol: HTTP
+      monitors: [{get_resource: monitor}]
+      subnet_id: {get_param: sub_id}
+      lb_method: ROUND_ROBIN
+      vip:
+        protocol_port: 80
+  lb:
+    type: OS::Neutron::LoadBalancer
+    properties:
+      protocol_port: 80
+      pool_id: {get_resource: pool}
