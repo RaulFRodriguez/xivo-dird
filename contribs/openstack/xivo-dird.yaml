@@ -41,7 +41,7 @@ resources:
       min_size: 1
       max_size: 3
       resource: 
-        type: XiVO::DIRD::Server
+        type: https://raw.githubusercontent.com/xivo-pbx/xivo-dird/async-plugin/contribs/openstack/instances.yaml
         properties:
           image: {get_param: image_id}
           flavor: {get_param: flavor_type}
@@ -89,12 +89,12 @@ resources:
   cpu_alarm_high:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-up if the average CPU > 50% for 1 minute
+      description: Scale-up if the max CPU > 20% for 2 minute
       meter_name: cpu_util
-      statistic: avg
-      period: 60
+      statistic: max
+      period: 120
       evaluation_periods: 1
-      threshold: 50
+      threshold: 20
       alarm_actions:
         - {get_attr: [xivo_dird_scaleup_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
@@ -102,12 +102,12 @@ resources:
   cpu_alarm_low:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-down if the average CPU < 15% for 10 minutes
+      description: Scale-down if the average CPU < 10% for 10 minutes
       meter_name: cpu_util
       statistic: avg
       period: 600
       evaluation_periods: 1
-      threshold: 15
+      threshold: 10
       alarm_actions:
         - {get_attr: [xivo_dird_scaledown_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
