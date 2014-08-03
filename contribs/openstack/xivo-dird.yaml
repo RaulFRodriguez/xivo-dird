@@ -41,15 +41,15 @@ resources:
       min_size: 1
       max_size: 3
       resource: 
-        type: instances.yaml
+        type: https://raw.githubusercontent.com/xivo-pbx/xivo-dird/async-plugin/contribs/openstack/instances.yaml
         properties:
           image: {get_param: image_id}
           flavor: {get_param: flavor_type}
           key_name: {get_param: key_name}
           pool_id: {get_resource: pool}
-          networks: 
-            - network: {get_param: net_id}
           metadata: {"metering.stack": {get_param: "OS::stack_id"}}
+          networks:
+            - network: {get_param: net_id}
           user_data: |
             #!/bin/bash
             echo "deb http://mirror.xivo.io/debian/ xivo-dev main" >> /etc/apt/sources.list
