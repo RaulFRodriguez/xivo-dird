@@ -89,10 +89,10 @@ resources:
   cpu_alarm_high:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-up if the max CPU > 20% for 2 minute
+      description: Scale-up if the max CPU > 20% for 30 seconds
       meter_name: cpu_util
       statistic: max
-      period: 120
+      period: 30
       evaluation_periods: 1
       threshold: 20
       alarm_actions:
@@ -102,10 +102,10 @@ resources:
   cpu_alarm_low:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-down if the average CPU < 10% for 10 minutes
+      description: Scale-down if the average CPU < 10% for 1 minute
       meter_name: cpu_util
       statistic: avg
-      period: 600
+      period: 60
       evaluation_periods: 1
       threshold: 10
       alarm_actions:
