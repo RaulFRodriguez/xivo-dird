@@ -61,8 +61,10 @@ class PluginManager(object):
 
         for path in paths:
             with open(path) as f:
-                raw_content = f.read()
-                content = json.loads(raw_content)
+                try:
+                    content = json.load(f)
+                except ValueError:
+                    logger.exception('Error while loading %s', path)
                 result[content['type']].append(content)
 
         return result
