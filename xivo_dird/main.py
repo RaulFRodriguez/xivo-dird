@@ -19,6 +19,7 @@ import argparse
 import json
 import logging
 import os
+import signal
 
 from flup.server.fcgi import WSGIServer
 
@@ -37,7 +38,17 @@ _SOCKET_FILENAME = '/tmp/{daemon}.sock'.format(daemon=_DAEMONNAME)
 _DEFAULT_CONFIG_FILENAME = '/etc/xivo/xivo-dird/xivo-dird.conf'
 
 
+class _ConfigReloadRequested(BaseException):
+    pass
+
+
+should_load_config = False
+
+
 def main():
+    global should_load_config
+    should_load_config = True
+
     parsed_args = _parse_args()
 
     if parsed_args.user:
@@ -45,11 +56,26 @@ def main():
 
     setup_logging(_LOG_FILENAME, parsed_args.foreground, parsed_args.debug)
 
-    with open(parsed_args.config) as config_file:
-        config = json.load(config_file)
+    signal.signal(signal.SIGUSR1, handler)
 
-    with pidfile_context(_PID_FILENAME, parsed_args.foreground):
-        _run(config, parsed_args.debug)
+    while should_load_config:
+        try:
+
+            with open(parsed_args.config) as config_file:
+                config = json.load(config_file)
+            should_load_config = False
+
+            with pidfile_context(_PID_FILENAME, parsed_args.foreground):
+                _run(config, parsed_args.debug)
+
+        except _ConfigReloadRequested:
+            logger.debug('Config reload requested')
+            should_load_config = True
+
+
+def handler(signum, frame):
+    logger.debug('Catched SIGUSR1')
+    raise _ConfigReloadRequested()
 
 
 def _parse_args():
