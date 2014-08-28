@@ -19,7 +19,8 @@ import logging
 import random
 import threading
 
-from xivo_dao import misc_dao
+from xivo_dao.helpers import config as dao_config
+
 from xivo_dird.backends.directory_source_plugin import DirectorySourcePlugin
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
 
     def __init__(self, config):
         self._config = config
+        dao_config.DB_URI = 'postgresql://%(db_user)s:%(db_password)s@%(db_host)s/%(db_name)s' % config
 
     def load(self, args=None):
         logger.debug('Loading with %s', args)
@@ -42,6 +44,7 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
             yield '%s %s' % (args.get('name', ['User'])[0], str(i))
 
     def reverse_lookup(self, term):
+        from xivo_dao import misc_dao
         logger.debug('Looking up for %s', term)
         delay = random.random() * 5
         threadid = threading.current_thread().ident
