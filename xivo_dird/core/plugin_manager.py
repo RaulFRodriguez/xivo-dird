@@ -91,7 +91,6 @@ class PluginManager(object):
             future = self._executor.submit(lookup_source.lookup, term, args)
             pending_futures.add((name, future))
 
-        # Return when the first not None result is found
         fs = [pending_future[1] for pending_future in pending_futures]
         presents, _ = wait(fs, return_when=ALL_COMPLETED)
         results = []
