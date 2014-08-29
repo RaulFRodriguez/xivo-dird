@@ -44,12 +44,18 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
             yield '%s %s' % (args.get('name', ['User'])[0], str(i))
 
     def reverse_lookup(self, term):
-        from xivo_dao import misc_dao
+        from xivo_dao.helpers.db_manager import daosession
+
+        @daosession
+        def pg_sleep(session, delay):
+            query = 'SELECT pg_sleep({seconds})'.format(seconds=delay)
+            session.bind.execute(query)
+
         logger.debug('Looking up for %s', term)
-        delay = random.random() * 5
+        delay = random.random() * 2
         threadid = threading.current_thread().ident
         logger.debug('{} sleeping for {} seconds...'.format(threadid, delay))
-        misc_dao.pg_sleep(delay)
+        pg_sleep(delay)
         logger.debug('{} done!'.format(threadid))
         return self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
 
