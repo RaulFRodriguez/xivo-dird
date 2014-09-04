@@ -26,6 +26,16 @@ To run the container, do the following:
 
     docker run -d -P xivo-dird
 
+To overwrite the YAML configuration file with a provisioning http file launch docker with the -e option.
+
+    docker run -d -e DIRD_URL="http://my_server" -P xivo-amid
+
+You have three possible variables :
+
+- DIRD_URL to give where is the config file (ex. "http://my_server")
+- DIRD_CONF_NAME to set a different name, by default is xivo-dird.yml
+- DIRD_PLUGINS who are a list of the plugin config. (ex. "dummy.yml ldap.yml")
+
 On interactive mode :
 
     docker run -i -t xivo-dird /bin/bash

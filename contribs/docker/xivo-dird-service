@@ -15,10 +15,19 @@ function start {
 }
 
 function config_prov {
-    if [ ! -z $DIRD_CONF ]
+    DIRD_CONF_NAME=${DIRD_CONF_NAME:-"xivo-dird.yml"}
+
+    if [ ! -z $DIRD_URL ]
     then
-        echo "Provisioning config file from $DIRD_CONF"
-        curl -s $DIRD_CONF -o /etc/xivo/xivo-dird/xivo-dird.yml
+        echo "Provisioning config file from $DIRD_URL"
+        curl -s $DIRD_URL/$DIRD_CONF_NAME -o /etc/xivo/xivo-dird/xivo-dird.yml
+    fi
+
+    if [ ! -z $DIRD_PLUGINS ]
+    then
+        for P in $DIRD_PLUGINS
+            echo "Download $P plugin config"
+            curl -s $DIRD_URL/$P -o /etc/xivo/xivo-dird/plugins.d/$P
     fi
 }
 
