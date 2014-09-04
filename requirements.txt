@@ -6,5 +6,6 @@ git+https://github.com/xivo-pbx/xivo-dao.git
 sqlalchemy
 psycopg2
 flup
-Flask
+Flask==0.8.1
 futures
+pyaml

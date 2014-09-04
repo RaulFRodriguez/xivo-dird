@@ -29,8 +29,8 @@ class LDAPPlugin(DirectorySourcePlugin):
 
     def __init__(self, config):
         self._config = config
-        self._ldap = ldap.initialize(self._config['uri'])
-        self._ldap.simple_bind(self._config['login'], self._config['password'])
+        self._ldap = ldap.initialize(self._config.uri)
+        self._ldap.simple_bind(self._config.login, self._config.password)
 
     def load(self, args=None):
         logger.debug('Loading with %s', args)
@@ -40,7 +40,7 @@ class LDAPPlugin(DirectorySourcePlugin):
 
     def lookup(self, term, args):
         logger.debug('Looking up for %s', term)
-        results = self._ldap.search_s(self._config['search_base'],
+        results = self._ldap.search_s(self._config.search_base,
                                       ldap.SCOPE_SUBTREE,
                                       filterstr='(|(sn=*{term}*)(givenName=*{term}*))'.format(term=term))
         return results
@@ -48,7 +48,7 @@ class LDAPPlugin(DirectorySourcePlugin):
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
         time.sleep(random.random())
-        return self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
+        return self._config.reverse_result
 
 
 Klass = LDAPPlugin

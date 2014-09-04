@@ -78,10 +78,10 @@ RUN cp debian/xivo-dird.init /etc/init.d/xivo-dird
 RUN mkdir /etc/xivo/xivo-dird
 RUN mkdir /var/run/xivo-dird
 RUN chown www-data: /var/run/xivo-dird
-RUN cp -a examples/xivo-dird.conf examples/plugins.d /etc/xivo/xivo-dird
+RUN cp -a contribs/examples/xivo-dird.yml contribs/examples/plugins.d /etc/xivo/xivo-dird
 
 # Configure nginx
-RUN cp examples/xivo-dird.nginx /etc/nginx/sites-available/xivo-dird
+RUN cp contribs/examples/xivo-dird.nginx /etc/nginx/sites-available/xivo-dird
 
 # Add script to run services
 ADD xivo-dird-service /root/xivo-dird-service

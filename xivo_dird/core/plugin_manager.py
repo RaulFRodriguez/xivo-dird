@@ -17,11 +17,12 @@
 
 import os
 import logging
-import json
+import yaml
 
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, FIRST_COMPLETED
 from importlib import import_module
 from collections import namedtuple, defaultdict
+from xivo_dird.config import ConfigXivoDird
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ class PluginManager(object):
     def load_plugin_configurations(self):
         paths = []
 
-        for dir_path, _, file_names in os.walk(self._config.get('plugin_config_dir')):
+        for dir_path, _, file_names in os.walk(self._config.plugin_config_dir):
             for file_name in file_names:
                 paths.append(os.path.join(dir_path, file_name))
 
@@ -65,10 +66,10 @@ class PluginManager(object):
         for path in paths:
             with open(path) as f:
                 try:
-                    content = json.load(f)
+                    content = ConfigXivoDird(yaml.load(f))
                 except ValueError:
                     logger.exception('Error while loading %s', path)
-                result[content['type']].append(content)
+                result[content.type].append(content)
 
         return result
 
@@ -118,11 +119,11 @@ class PluginManager(object):
             return None
 
     def _get_reverse_sources(self):
-        for reverse_name in self._config.get('reverse_directories'):
+        for reverse_name in self._config.reverse_directories:
             yield self._sources[reverse_name]
 
     def _get_lookup_sources(self, profile):
-        for lookup_name in self._config.get('lookup_directories').get(profile):
+        for lookup_name in self._config.lookup_directories.profile:
             yield self._sources[lookup_name]
 
     def _get_plugins(self):
@@ -130,9 +131,9 @@ class PluginManager(object):
             yield plugin
 
     def _get_plugin_names(self):
-        if 'plugins' not in self._config:
+        if not self._config.plugins:
             logger.debug('No plugin configured')
             return
 
-        for plugin in self._config.get('plugins'):
+        for plugin in self._config.plugins:
             yield plugin

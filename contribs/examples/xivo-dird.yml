@@ -1,0 +1,17 @@
+plugin_config_dir: /etc/xivo/xivo-dird/plugins.d
+
+plugins:
+    - dummy
+    - ldap_backend
+
+reverse_directories:
+    - dummy_limonest
+    - dummy_quebec
+
+lookup_directories:
+    default:
+        - dummy_limonest
+        - dummy_quebec
+    ldap:
+        - openldap-dev
+

@@ -1,0 +1,6 @@
+type: ldap_backend
+name: openldap-dev
+uri: ldap://openldap-dev.lan-quebec.avencall.com:389
+login: cn=admin,dc=lan-quebec,dc=avencall,dc=com
+password: mypassword
+search_base: dc=lan-quebec,dc=avencall,dc=com
