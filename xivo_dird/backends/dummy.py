@@ -43,7 +43,7 @@ class DummyPlugin(DirectorySourcePlugin):
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
         time.sleep(random.random())
-        return self._config.reverse_result
+        return self._config.reverse_result[ord(term[-1]) % len(self._config['reverse_result'])]
 
 
 Klass = DummyPlugin

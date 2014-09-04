@@ -57,7 +57,7 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
         logger.debug('{} sleeping for {} seconds...'.format(threadid, delay))
         pg_sleep(delay)
         logger.debug('{} done!'.format(threadid))
-        return self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
+        return self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
 
 
 Klass = DummyPGSleepPlugin
