@@ -36,7 +36,7 @@ def headers(profile):
         {'column_headers': ['Firstname', 'Lastname', 'Phone number'],
          'column_types': [None, None, 'office']}
     )
-    return make_response(dummy, 200)
+    return make_response(dummy, 200, None, 'application/json')
 
 
 @app.route('/{version}/directories/lookup/<profile>'.format(version=VERSION))
@@ -45,7 +45,7 @@ def lookup(profile):
     term = request.args['term']
     result = current_app.backend_plugin_manager.lookup(profile, term, request.args)
     formatted_result = result_formatter.format_lookup(result)
-    return make_response(_encode_json(formatted_result), 200)
+    return make_response(_encode_json(formatted_result), 200, None, 'application/json')
 
 
 @app.route('/{version}/directories/reverse_lookup'.format(version=VERSION))
@@ -59,7 +59,7 @@ def reverse_lookup():
 
     result = current_app.backend_plugin_manager.reverse_lookup(request.args['term'])
     formatted_result = result_formatter.format_reverse_lookup(result)
-    return make_response(_encode_json(formatted_result), 200)
+    return make_response(_encode_json(formatted_result), 200, None, 'application/json')
 
 
 def _encode_json(data):
