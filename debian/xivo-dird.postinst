@@ -21,9 +21,10 @@ case "$1" in
 		touch "$LOG_FILENAME"
 	fi
 	chown www-data: "$LOG_FILENAME"
-
 	chown www-data: "$SOCKET_DIRNAME"
 	chown www-data: "$PID_DIRNAME"
+
+        invoke-rc.d nginx reload
 
 	;;
 

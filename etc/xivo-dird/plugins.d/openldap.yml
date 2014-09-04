@@ -1,0 +1,6 @@
+type: ldap_backend
+name: openldap
+uri: ldap://openldap:389
+login: cn=admin,dc=avencall,dc=com
+password: mypassword
+search_base: dc=avencall,dc=com
