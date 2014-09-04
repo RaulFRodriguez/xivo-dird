@@ -1,37 +1,3 @@
-## Image to build from xivo repository
-
-FROM debian:latest
-MAINTAINER XiVO Team "dev@avencall.com"
-
-ENV DEBIAN_FRONTEND noninteractive
-ENV HOME /root
-
-# Add xivo mirror
-RUN echo "deb http://mirror.xivo.io/debian/ xivo-five main" >> /etc/apt/sources.list
-ADD http://mirror.xivo.io/xivo_current.key /tmp/
-RUN apt-key add /tmp/xivo_current.key
-RUN rm /tmp/xivo_current.key
-RUN apt-get -qq update
-RUN apt-get -qq -y install \
-    wget \
-    apt-utils \
-    ssh \
-    xivo-dird
-
-# Add script to run services
-ADD xivo-dird-service /root/xivo-dird-service
-RUN chmod +x /root/xivo-dird-service
-
-# Set password
-RUN echo "root:xivo" | chpasswd
-
-# Clean
-RUN apt-get clean
-
-EXPOSE 50060
-
-CMD /root/xivo-dird-service
-
 ## Image to build from sources
 
 FROM debian:latest
@@ -61,6 +27,7 @@ RUN apt-get -qq -y install \
     nginx \
     xivo-config \
     xivo-lib-python \
+    curl \
     net-tools
 
 # Install xivo-dird

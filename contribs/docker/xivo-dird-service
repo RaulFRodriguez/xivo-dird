@@ -6,10 +6,31 @@ function start {
     for service in $SERVICES
     do
         echo "Launch $service ..."
+        if [ $service == nginx ]
+        then
+            check_nginx
+        fi
         service $service start
     done
 }
 
+function config_prov {
+    if [ ! -z $DIRD_CONF ]
+    then
+        echo "Provisioning config file from $DIRD_CONF"
+        curl -s $DIRD_CONF -o /etc/xivo/xivo-dird/xivo-dird.yml
+    fi
+}
+
+function check_nginx {
+    service nginx status
+    if [ $? == 0 ]
+    then
+        pkill -9 nginx
+    fi
+}
+
 # Launching xivo-dird
 start
+config_prov
 xivo-dird -d -f -u www-data
