@@ -82,6 +82,7 @@ RUN cp -a contribs/examples/xivo-dird.yml contribs/examples/plugins.d /etc/xivo/
 
 # Configure nginx
 RUN cp contribs/examples/xivo-dird.nginx /etc/nginx/sites-available/xivo-dird
+RUN ln -s /etc/nginx/sites-available/xivo-dird /etc/nginx/sites-enabled/xivo-dird
 
 # Add script to run services
 ADD xivo-dird-service /root/xivo-dird-service
