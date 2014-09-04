@@ -123,7 +123,7 @@ class PluginManager(object):
             yield self._sources[reverse_name]
 
     def _get_lookup_sources(self, profile):
-        for lookup_name in self._config.lookup_directories.profile:
+        for lookup_name in getattr(self._config.lookup_directories, profile):
             yield self._sources[lookup_name]
 
     def _get_plugins(self):
