@@ -20,8 +20,8 @@ import abc
 
 class DirectorySourcePlugin(object):
     '''
-    This is the base class of a backend plugin. Each instance of these plugins
-    is references to as a source.
+    This is the base class of a backend plugin. Each instance of this plugin
+    is called a source.
 
     A variable named "Klass" should be defined in the module's global scope
     and the plugin class should be assigned to it.
@@ -57,3 +57,5 @@ class DirectorySourcePlugin(object):
         '''
         Finds a name based on a number
         '''
+
+# Klass = DirectorySourcePlugin()
