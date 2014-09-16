@@ -25,8 +25,13 @@ SourceReverseLookupResult = namedtuple('SourceReverseLookupResult', ['name', 'nu
 
 class DirectorySourcePlugin(object):
     '''
-    This is the base class of a backend plugin. Each instance of this plugin
-    is called a source.
+    This is the base class of a backend plugin. Each instance of this plugin is
+    called a source. For example, one source (one instance) would search results
+    from LDAP alpha and another source (another instance of the same plugin)
+    would search results from LDAP beta.
+
+    One instance is created for each config file whose plugin key is the name()
+    of the plugin.
 
     A variable named "Klass" should be defined in the module's global scope
     and the plugin class should be assigned to it.
@@ -35,8 +40,8 @@ class DirectorySourcePlugin(object):
 
     def load(self, args=None):
         '''
-        Bootstrap the plugin instance and acquire ressources that are required
-        by the plugin instance to work properly
+        Bootstrap the plugin instance (the source) and acquire ressources that
+        are required by the plugin instance to work properly
         '''
 
     def unload(self, args=None):
@@ -54,13 +59,18 @@ class DirectorySourcePlugin(object):
     @abc.abstractmethod
     def lookup(self, term, args):
         '''
-        Returns a list of lookup result
+        Finds a list of lookup result matching the term.
+
+        Returns a iterable of dict, whose keys and values reflect the data from
+        the source.
         '''
 
     @abc.abstractmethod
     def reverse_lookup(self, term):
         '''
-        Finds a name based on a number
+        Finds a name based on a number.
+
+        Returns a SourceReverseLookupResult.
         '''
 
-# Klass = DirectorySourcePlugin()
+# Klass = DirectorySourcePlugin
