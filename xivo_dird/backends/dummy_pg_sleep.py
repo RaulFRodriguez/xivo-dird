@@ -23,6 +23,7 @@ from xivo_dao.helpers import config as dao_config
 from xivo_dao.helpers.db_manager import daosession
 
 from xivo_dird.backends.directory_source_plugin import DirectorySourcePlugin
+from xivo_dird.backends.directory_source_plugin import SourceReverseLookupResult
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,8 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
         logger.debug('{} sleeping for {} seconds...'.format(threadid, delay))
         pg_sleep(delay)
         logger.debug('{} done!'.format(threadid))
-        return self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
+        name = self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
+        return SourceReverseLookupResult(name=name, number=term)
 
 
 Klass = DummyPGSleepPlugin

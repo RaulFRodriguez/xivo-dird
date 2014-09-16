@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 
 def format_reverse_lookup(result):
     return {
-        'name': result.result,
-        'number': result.query,
+        'name': result.result.name,
+        'number': result.result.number,
+        'query': result.query,
         'source': result.source,
     }
 

@@ -21,6 +21,7 @@ import random
 import time
 
 from xivo_dird.backends.directory_source_plugin import DirectorySourcePlugin
+from xivo_dird.backends.directory_source_plugin import SourceReverseLookupResult
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,8 @@ class LDAPPlugin(DirectorySourcePlugin):
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
         time.sleep(random.random())
-        return self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
+        name = self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
+        return SourceReverseLookupResult(name=name, number=term)
 
 
 Klass = LDAPPlugin

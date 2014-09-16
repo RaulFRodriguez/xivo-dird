@@ -17,6 +17,11 @@
 
 import abc
 
+from collections import namedtuple
+
+
+SourceReverseLookupResult = namedtuple('SourceReverseLookupResult', ['name', 'number'])
+
 
 class DirectorySourcePlugin(object):
     '''
