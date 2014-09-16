@@ -90,14 +90,13 @@ class PluginManager(object):
         for lookup_source in self._get_lookup_sources(profile):
             name = lookup_source.name()
             future = self._executor.submit(lookup_source.lookup, term, args)
-            pending_futures.add((name, future))
+            future.name = name
+            pending_futures.add(future)
 
-        fs = [pending_future[1] for pending_future in pending_futures]
-        presents, _ = wait(fs, return_when=ALL_COMPLETED)
+        presents, _ = wait(pending_futures, return_when=ALL_COMPLETED)
         results = []
         for present in presents:
-            name = [pend[0] for pend in pending_futures if pend[1] == present][0]
-            results.append(LookupResult(present.result(), term, args, name))
+            results.append(LookupResult(present.result(), term, args, present.name))
 
         return results
 
@@ -106,15 +105,14 @@ class PluginManager(object):
         for reverse_source in self._get_reverse_sources():
             name = reverse_source.name()
             future = self._executor.submit(reverse_source.reverse_lookup, term)
-            pending_futures.add((name, future))
+            future.name = name
+            pending_futures.add(future)
 
         # Return when the first not None result is found
-        fs = [pending_future[1] for pending_future in pending_futures]
-        presents, _ = wait(fs, return_when=FIRST_COMPLETED)
+        presents, _ = wait(pending_futures, return_when=FIRST_COMPLETED)
         p = presents.pop()
         try:
-            n = [pend[0] for pend in pending_futures if pend[1] == p][0]
-            return ReverseLookupResult(p.result(), term, n)
+            return ReverseLookupResult(p.result(), term, p.name)
         except IndexError:
             return None
 
