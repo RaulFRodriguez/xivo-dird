@@ -20,6 +20,7 @@ import random
 import threading
 
 from xivo_dao.helpers import config as dao_config
+from xivo_dao.helpers.db_manager import daosession
 
 from xivo_dird.backends.directory_source_plugin import DirectorySourcePlugin
 
@@ -30,7 +31,7 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
 
     def __init__(self, config):
         self._config = config
-        dao_config.DB_URI = 'postgresql://%(db_user)s:%(db_password)s@%(db_host)s/%(db_name)s' % config
+        dao_config.DB_URI = 'postgresql://%(db_user)s:%(db_password)s@%(db_host)s/%(db_name)s' % config.__dict__
 
     def load(self, args=None):
         logger.debug('Loading with %s', args)
@@ -44,7 +45,6 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
             yield '%s %s' % (args.get('name', ['User'])[0], str(i))
 
     def reverse_lookup(self, term):
-        from xivo_dao.helpers.db_manager import daosession
 
         @daosession
         def pg_sleep(session, delay):
