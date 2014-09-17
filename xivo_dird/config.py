@@ -19,6 +19,8 @@ import argparse
 import os
 import yaml
 
+from xivo_bus.ctl.config import BusConfig
+
 _DAEMONNAME = 'xivo-dird'
 _CONF_FILENAME = '{}.yml'.format(_DAEMONNAME)
 
@@ -37,6 +39,20 @@ class ConfigXivoDird(object):
         for k, v in adict.items():
             if isinstance(v, dict):
                 self.__dict__[k] = ConfigXivoDird(v)
+
+    @property
+    def bus_config_obj(self):
+        bus_config_obj = BusConfig(host=self.bus.host,
+                                   port=self.bus.port,
+                                   virtual_host=self.bus.vhost,
+                                   username=self.bus.username,
+                                   password=self.bus.password,
+                                   exchange_name=self.bus.exchange_name,
+                                   exchange_type=self.bus.exchange_type,
+                                   exchange_durable=self.bus.exchange_durable,
+                                   default_routing_key=self.bus.default_routing_key)
+        return bus_config_obj
+
 
 def configure():
     parser = argparse.ArgumentParser()
