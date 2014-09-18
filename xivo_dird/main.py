@@ -27,7 +27,7 @@ from xivo.user_rights import change_user
 from xivo.xivo_logging import setup_logging
 from xivo_dird import dird_server
 from xivo_dird import core
-from xivo_dird.bus.consumer import Consumer
+from xivo_bus.ctl.consumer import BusConsumer
 from xivo_dird.config import config
 
 logger = logging.getLogger(__name__)
@@ -40,9 +40,12 @@ def main():
     if config.user:
         change_user(config.user)
 
-    bus_consumer = Consumer(config.bus_config_obj,
-                            callback=ask_for_reload,
-                            routing_key='config.directory.sources.*')
+    bus_consumer = BusConsumer(config.bus_config_obj)
+    bus_consumer.connect()
+    bus_consumer.add_binding(ask_for_reload,
+                             config.bus.queue_name,
+                             config.bus.exchange_name,
+                             'config.directory.sources.*')
     thread.start_new_thread(bus_consumer.run, ())
 
     with pidfile_context(config._PID_FILENAME, config.foreground):
