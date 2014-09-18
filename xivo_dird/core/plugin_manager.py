@@ -49,10 +49,10 @@ class PluginManager(object):
         self._executor = ThreadPoolExecutor(max_workers=10)
 
     def stop(self):
+        self._executor.shutdown()
+
         for source in self._sources.itervalues():
             source.unload()
-
-        self._executor.shutdown()
 
     def load_plugin_configurations(self):
         paths = []
