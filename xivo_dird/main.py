@@ -53,11 +53,14 @@ def ask_for_reload(body):
     global _reload
 
     if body['name'] == 'directory_source_edited':
-        logger.info('received')
-        if wsgi_server:
-            _reload = True
-            # wsgi_server.shutdown() only available with flup 1.0.3
-            os.kill(os.getpid(), signal.SIGHUP)
+        logger.info('Reloading the configuration...')
+        dird_server.app.backend_plugin_manager.stop()
+
+        plugin_manager = core.PluginManager(config)
+        plugin_manager.start()
+
+        dird_server.app.backend_plugin_manager = plugin_manager
+        logger.info('Reloaded the configuration.')
 
 
 def _init_signal():
@@ -69,27 +72,18 @@ def _handle_sigterm(signum, frame):
 
 
 def _run():
-    global wsgi_server
-    global _reload
-
     _init_signal()
 
-    while True:
-        _reload = False
-        plugin_manager = dird_server.app.backend_plugin_manager = core.PluginManager(config)
-        plugin_manager.start()
-        logger.info('WSGIServer starting with uid %s', os.getuid())
-        wsgi_server = WSGIServer(dird_server.app,
-                                 bindAddress=config._SOCKET_FILENAME,
-                                 multithreaded=True,
-                                 multiprocess=False,
-                                 debug=config.debug)
-        wsgi_server.run()
-        plugin_manager.stop()
-        del plugin_manager
-
-        if not _reload:
-            break
+    plugin_manager = dird_server.app.backend_plugin_manager = core.PluginManager(config)
+    plugin_manager.start()
+    logger.info('WSGIServer starting with uid %s', os.getuid())
+    wsgi_server = WSGIServer(dird_server.app,
+                             bindAddress=config._SOCKET_FILENAME,
+                             multithreaded=True,
+                             multiprocess=False,
+                             debug=config.debug)
+    wsgi_server.run()
+    dird_server.app.backend_plugin_manager.stop()
 
 
 if __name__ == '__main__':
