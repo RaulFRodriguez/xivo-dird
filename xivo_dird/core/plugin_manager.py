@@ -33,7 +33,7 @@ LookupResult = namedtuple('LookupResult', ['results', 'query', 'args', 'source']
 
 class PluginManager(object):
     '''
-    Some asumptions about the PluginManager
+    Some assumptions about the PluginManager
     Plugins are used to query different directory sources
     Header configuration is a configuration of the PluginManager
     '''
