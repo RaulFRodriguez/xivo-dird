@@ -17,7 +17,6 @@
 
 import logging
 import random
-import threading
 
 from xivo_dao.helpers import config as dao_config
 from xivo_dao.helpers.db_manager import daosession
@@ -54,10 +53,9 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
 
         logger.debug('Looking up for %s', term)
         delay = random.random() * 2
-        threadid = threading.current_thread().ident
-        logger.debug('{} sleeping for {} seconds...'.format(threadid, delay))
+        logger.debug('sleeping for {} seconds...'.format(delay))
         pg_sleep(delay)
-        logger.debug('{} done!'.format(threadid))
+        logger.debug('done!')
         name = self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
         return SourceReverseLookupResult(name=name, number=term)
 
