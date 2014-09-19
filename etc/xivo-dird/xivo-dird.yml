@@ -24,5 +24,5 @@ bus:
     exchange_name: xivo
     exchange_type: topic
     exchange_durable: True
-    queue_name: xivo-dird-queue
+    queue_name: ''
     default_routing_key: '#'
