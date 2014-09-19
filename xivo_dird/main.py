@@ -32,7 +32,6 @@ from xivo_dird.config import config
 
 logger = logging.getLogger(__name__)
 wsgi_server = None
-_reload = None
 
 
 def main():
@@ -53,8 +52,6 @@ def main():
 
 
 def ask_for_reload(body):
-    global _reload
-
     if body['name'] == 'directory_source_edited':
         logger.info('Reloading the configuration...')
         dird_server.app.backend_plugin_manager.stop()
