@@ -41,6 +41,7 @@ def main():
 
     bus_consumer = BusConsumer(config.bus_config_obj)
     bus_consumer.connect()
+    bus_consumer.channel.exchange_declare(config.bus.exchange_name)
     bus_consumer.add_binding(ask_for_reload,
                              config.bus.queue_name,
                              config.bus.exchange_name,
