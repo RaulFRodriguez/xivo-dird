@@ -15,3 +15,14 @@ lookup_directories:
     ldap:
         - openldap-dev
 
+bus:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    vhost: /
+    exchange_name: xivo
+    exchange_type: topic
+    exchange_durable: True
+    queue_name: ''
+    default_routing_key: '#'
