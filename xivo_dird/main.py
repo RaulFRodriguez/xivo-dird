@@ -25,7 +25,7 @@ from flup.server.fcgi import WSGIServer
 from xivo.daemonize import pidfile_context
 from xivo.user_rights import change_user
 from xivo.xivo_logging import setup_logging
-from xivo_dird import dird_server
+from xivo_dird import http
 from xivo_dird import core
 from xivo_bus.ctl.consumer import BusConsumer
 from xivo_dird.config import config
@@ -55,12 +55,12 @@ def main():
 def ask_for_reload(body):
     if body['name'] == 'directory_source_edited':
         logger.info('Reloading the configuration...')
-        dird_server.app.backend_plugin_manager.stop()
+        http.app.backend_plugin_manager.stop()
 
         plugin_manager = core.PluginManager(config)
         plugin_manager.start()
 
-        dird_server.app.backend_plugin_manager = plugin_manager
+        http.app.backend_plugin_manager = plugin_manager
         logger.info('Reloaded the configuration.')
 
 
@@ -75,16 +75,17 @@ def _handle_sigterm(signum, frame):
 def _run():
     _init_signal()
 
-    plugin_manager = dird_server.app.backend_plugin_manager = core.PluginManager(config)
+    plugin_manager = http.app.backend_plugin_manager = core.PluginManager(config)
     plugin_manager.start()
     logger.info('WSGIServer starting with uid %s', os.getuid())
-    wsgi_server = WSGIServer(dird_server.app,
+    http.load(config.http_views)
+    wsgi_server = WSGIServer(http.app,
                              bindAddress=config._SOCKET_FILENAME,
                              multithreaded=True,
                              multiprocess=False,
                              debug=config.debug)
     wsgi_server.run()
-    dird_server.app.backend_plugin_manager.stop()
+    http.app.backend_plugin_manager.stop()
 
 
 if __name__ == '__main__':
