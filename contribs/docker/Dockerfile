@@ -6,12 +6,6 @@ MAINTAINER XiVO Team "dev@avencall.com"
 ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
 
-# Add xivo mirror
-RUN echo "deb http://mirror.xivo.io/debian/ xivo-dev main" >> /etc/apt/sources.list
-ADD http://mirror.xivo.io/xivo_current.key /tmp/
-RUN apt-key add /tmp/xivo_current.key
-RUN rm /tmp/xivo_current.key
-
 # Add dependencies
 RUN apt-get -qq update
 RUN apt-get -qq -y install \
@@ -25,8 +19,6 @@ RUN apt-get -qq -y install \
     libsasl2-dev \
     libldap2-dev \
     nginx \
-    xivo-config \
-    xivo-lib-python \
     curl \
     net-tools
 
@@ -42,8 +34,8 @@ RUN python setup.py install
 RUN touch /var/log/xivo-dird.log
 RUN chown www-data: /var/log/xivo-dird.log
 RUN cp debian/xivo-dird.init /etc/init.d/xivo-dird
-RUN mkdir /etc/xivo/xivo-dird
-RUN mkdir /var/run/xivo-dird
+RUN mkdir -p /etc/xivo/xivo-dird
+RUN mkdir -p  /var/run/xivo-dird
 RUN chown www-data: /var/run/xivo-dird
 RUN cp -a contribs/examples/xivo-dird.yml contribs/examples/plugins.d /etc/xivo/xivo-dird
 
