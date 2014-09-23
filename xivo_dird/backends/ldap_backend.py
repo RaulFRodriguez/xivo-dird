@@ -28,20 +28,19 @@ logger = logging.getLogger(__name__)
 
 class LDAPPlugin(DirectorySourcePlugin):
 
-    def __init__(self, config):
-        self._config = config
-        self._ldap = ldap.initialize(self._config.uri)
-        self._ldap.simple_bind(self._config.login, self._config.password)
-
     def load(self, args=None):
         logger.debug('Loading with %s', args)
+        self._config = args
+        self._ldap = ldap.initialize(args['uri'])
+        self._ldap.simple_bind(args['login'], args['password'])
 
     def unload(self, args=None):
         logger.debug('Unloading...')
 
     def lookup(self, term, args):
         logger.debug('Looking up for %s', term)
-        results = self._ldap.search_s(self._config.search_base,
+        logger.debug('config: %s', self._config)
+        results = self._ldap.search_s(self._config['search_base'],
                                       ldap.SCOPE_SUBTREE,
                                       filterstr='(|(sn=*{term}*)(givenName=*{term}*))'.format(term=term))
         return results
@@ -49,8 +48,5 @@ class LDAPPlugin(DirectorySourcePlugin):
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
         time.sleep(random.random())
-        name = self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
+        name = self._config['reverse_result'][ord(term[-1]) % len(self._config['reverse_result'])]
         return SourceReverseLookupResult(name=name, number=term)
-
-
-Klass = LDAPPlugin

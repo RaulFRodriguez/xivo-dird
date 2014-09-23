@@ -84,7 +84,7 @@ def _run():
                              multiprocess=False,
                              debug=config.debug)
     wsgi_server.run()
-    dird_server.app.backend_plugin_manager.stop()
+    plugin_manager.stop()
 
 
 if __name__ == '__main__':

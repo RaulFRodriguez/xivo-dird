@@ -11,3 +11,4 @@ flup
 Flask==0.8.1
 futures
 pyaml
+stevedore

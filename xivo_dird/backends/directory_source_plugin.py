@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import abc
+import os
+import yaml
 
 from collections import namedtuple
 
@@ -53,8 +55,7 @@ class DirectorySourcePlugin(object):
         '''
         Returns the name of this plugin instance
         '''
-        if hasattr(self, '_config'):
-            return self._config.name
+        return self._config.get('name')
 
     @abc.abstractmethod
     def lookup(self, term, args):

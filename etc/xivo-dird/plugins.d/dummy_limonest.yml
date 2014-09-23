@@ -1,7 +1,7 @@
 type: dummy
 name: dummy_limonest
 
-reverse_result: 
+reverse_result:
     - etienne
     - laurent
     - aurelie

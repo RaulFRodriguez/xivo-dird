@@ -44,6 +44,7 @@ def lookup(profile):
     logger.info('profile {} lookup'.format(profile))
     term = request.args['term']
     result = current_app.backend_plugin_manager.lookup(profile, term, request.args)
+    logger.debug('Lookup result: %s', result)
     formatted_result = result_formatter.format_lookup(result)
     return make_response(_encode_json(formatted_result), 200, None, 'application/json')
 

@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import os
 import logging
+import os
 import yaml
 
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, FIRST_COMPLETED
-from importlib import import_module
-from collections import namedtuple, defaultdict
-from xivo_dird.config import ConfigXivoDird
+from collections import namedtuple
+from collections import defaultdict
+from stevedore import extension
 
 logger = logging.getLogger(__name__)
 
@@ -41,72 +41,90 @@ class PluginManager(object):
     def __init__(self, config):
         logger.debug('PluginManager')
         self._config = config
-        self._sources = {}
-        plugin_configurations = self.load_plugin_configurations()
-        self.load_all_backends(plugin_configurations)
+        self._mgr = extension.ExtensionManager(
+            namespace='dird.sources',
+            invoke_on_load=False,
+        )
+        self._plugin_config = self._build_plugin_config()
+        self._sources = []
+        self._profile_sources = defaultdict(list)
 
-    def start(self):
-        self._executor = ThreadPoolExecutor(max_workers=10)
+    def _build_plugin_config(self):
+        '''
+        Fetch all plugin configurations
 
-    def stop(self):
-        self._executor.shutdown()
-
-        for source in self._sources.itervalues():
-            source.unload()
-
-    def load_plugin_configurations(self):
+        Returns a dictionnary of list of configurations. The dictionnary keys are
+        plugin types and the values are list of configurations for each instances.
+        '''
+        configs = defaultdict(list)
         paths = []
-
         for dir_path, _, file_names in os.walk(self._config.plugin_config_dir):
             for file_name in file_names:
                 paths.append(os.path.join(dir_path, file_name))
 
-        result = defaultdict(list)
-
         for path in paths:
             with open(path) as f:
-                try:
-                    content = ConfigXivoDird(yaml.load(f))
-                except ValueError:
-                    logger.exception('Error while loading %s', path)
-                result[content.type].append(content)
+                config = yaml.load(f)
+                plugin_type = config['type']
+                if plugin_type not in self._config.plugins:
+                    continue
+                configs[plugin_type].append(config)
 
-        return result
+        return configs
 
-    def load_all_backends(self, plugin_configurations):
-        for plugin_name in self._get_plugin_names():
-            module_name = 'xivo_dird.backends.%s' % plugin_name
-            try:
-                logger.debug('Loading module %s', module_name)
-                module = import_module(module_name)
-                for source_configuration in plugin_configurations[plugin_name]:
-                    source = module.Klass(source_configuration)
-                    self._sources[source.name()] = source
-            except ImportError:
-                logger.exception('Could not find plugin %s' % module_name)
+    def _load(self, extension):
+        '''
+        This function is responsible on the instanciation and setup
+        of each plugin instances.
+        '''
+        plugin_type = extension.name
+        for plugin_config in self._plugin_config[plugin_type]:
+            source = extension.plugin()
+            source.load(plugin_config)
+            self._sources.append(source)
+
+    def _init_profile_map(self):
+        logger.debug('Initializing profile sources')
+        for profile in self._config.lookup_directories.__dict__:
+            source_names = self._get_profile_lookup_sources(profile)
+            logger.debug('%s should contain %s', profile, source_names)
+            for source in self._sources:
+                logger.debug('Checking %s in %s', source.name(), source_names)
+                if source.name() in source_names:
+                    self._profile_sources[profile].append(source)
+
+    def _get_profile_lookup_sources(self, profile):
+        return getattr(self._config.lookup_directories, profile, [])
+
+    def start(self):
+        self._executor = ThreadPoolExecutor(max_workers=10)
+        self._mgr.map(self._load)
+        self._init_profile_map()
+
+    def stop(self):
+        self._executor.shutdown()
+
+    def _async_lookup(self, source, term, args):
+        logger.debug('Launching an async search in %s', source)
+        future = self._executor.submit(source.lookup, term, args)
+        future.name = source.name()
+        return future
 
     def lookup(self, profile, term, args):
-        pending_futures = set()
-        for lookup_source in self._get_lookup_sources(profile):
-            name = lookup_source.name()
-            future = self._executor.submit(lookup_source.lookup, term, args)
-            future.name = name
-            pending_futures.add(future)
-
+        pending_futures = [self._async_lookup(s, term, args)
+                           for s in self._profile_sources[profile]]
         presents, _ = wait(pending_futures, return_when=ALL_COMPLETED)
-        results = []
-        for present in presents:
-            results.append(LookupResult(present.result(), term, args, present.name))
+        return [LookupResult(p.result(), term, args, p.name) for p in presents]
 
-        return results
+    def _async_reverse_lookup(self, plugin, term):
+        future = self._executor.submit(plugin.reverse_lookup, term)
+        future.name = plugin.name()
+        return future
 
     def reverse_lookup(self, term):
-        pending_futures = set()
-        for reverse_source in self._get_reverse_sources():
-            name = reverse_source.name()
-            future = self._executor.submit(reverse_source.reverse_lookup, term)
-            future.name = name
-            pending_futures.add(future)
+        pending_futures = [self._async_reverse_lookup(s, term)
+                           for s in self._sources
+                           if s.name() in self._config.reverse_directories]
 
         # Return when the first not None result is found
         presents, _ = wait(pending_futures, return_when=FIRST_COMPLETED)
@@ -115,23 +133,3 @@ class PluginManager(object):
             return ReverseLookupResult(p.result(), term, p.name)
         except IndexError:
             return None
-
-    def _get_reverse_sources(self):
-        for reverse_name in self._config.reverse_directories:
-            yield self._sources[reverse_name]
-
-    def _get_lookup_sources(self, profile):
-        for lookup_name in getattr(self._config.lookup_directories, profile):
-            yield self._sources[lookup_name]
-
-    def _get_plugins(self):
-        for plugin in self._sources.itervalues():
-            yield plugin
-
-    def _get_plugin_names(self):
-        if not self._config.plugins:
-            logger.debug('No plugin configured')
-            return
-
-        for plugin in self._config.plugins:
-            yield plugin

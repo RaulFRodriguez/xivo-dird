@@ -58,6 +58,3 @@ class DummyPGSleepPlugin(DirectorySourcePlugin):
         logger.debug('done!')
         name = self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
         return SourceReverseLookupResult(name=name, number=term)
-
-
-Klass = DummyPGSleepPlugin

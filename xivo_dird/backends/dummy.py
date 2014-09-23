@@ -27,11 +27,10 @@ logger = logging.getLogger(__name__)
 
 class DummyPlugin(DirectorySourcePlugin):
 
-    def __init__(self, config):
-        self._config = config
-
     def load(self, args=None):
         logger.debug('Loading with %s', args)
+        self._config = args
+        self._reverse_results = self._config['reverse_result']
 
     def unload(self, args=None):
         logger.debug('Unloading...')
@@ -41,11 +40,11 @@ class DummyPlugin(DirectorySourcePlugin):
         for i in xrange(100):
             yield '%s %s' % (args.get('name', ['User'])[0], str(i))
 
+    def _rev_res(self, term):
+        pos = ord(term[-1]) % len(self._reverse_results)
+        return self._reverse_results[pos]
+
     def reverse_lookup(self, term):
         logger.debug('Looking up for %s', term)
         time.sleep(random.random())
-        name = self._config.reverse_result[ord(term[-1]) % len(self._config.reverse_result)]
-        return SourceReverseLookupResult(name=name, number=term)
-
-
-Klass = DummyPlugin
+        return SourceReverseLookupResult(name=self._rev_res(term), number=term)
