@@ -25,5 +25,9 @@ setup(
             'ldap = xivo_dird.backends.ldap_backend:LDAPPlugin',
             'dummy = xivo_dird.backends.dummy:DummyPlugin',
         ],
+        'dird.views': [
+            'default = xivo_dird.http_views.default_json:load',
+            'aastra = xivo_dird.http_views.aastra_view:load',
+        ],
     },
 )

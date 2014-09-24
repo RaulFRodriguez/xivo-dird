@@ -1,7 +1,7 @@
 plugin_config_dir: /etc/xivo/xivo-dird/plugins.d
 http_views:
-    - default_json
-    - aastra_view
+    - default
+    - aastra
 
 plugins:
     - dummy

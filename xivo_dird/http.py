@@ -18,7 +18,7 @@
 import logging
 
 from flask import Flask
-from importlib import import_module
+from stevedore import enabled
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
@@ -27,8 +27,12 @@ VERSION = 0.1
 
 
 def load(configured_views):
-    for view_name in configured_views:
-        logger.info('Loading http view %s', view_name)
-        module_name = 'xivo_dird.http_views.%s' % view_name
-        module = import_module(module_name)
-        module.load({'http_app': app})
+    def plugin_filter(extension):
+        return extension.name in configured_views
+
+    enabled.EnabledExtensionManager(
+        namespace='dird.views',
+        check_func=plugin_filter,
+        invoke_on_load=True,
+        invoke_args=({'http_app': app},),
+    )
