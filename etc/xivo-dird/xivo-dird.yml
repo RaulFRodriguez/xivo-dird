@@ -6,6 +6,7 @@ http_views:
 plugins:
     - dummy
     - ldap
+    - csv
 
 reverse_directories:
     - dummy_limonest
@@ -13,8 +14,7 @@ reverse_directories:
 
 lookup_directories:
     default:
-        - dummy_limonest
-        - dummy_quebec
+        - dummy-csv
     ldap:
         - openldap-dev
 
