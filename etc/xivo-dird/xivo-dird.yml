@@ -1,6 +1,7 @@
 plugin_config_dir: /etc/xivo/xivo-dird/plugins.d
-http_plugins:
+http_views:
     - default_json
+    - aastra_view
 
 plugins:
     - dummy
@@ -18,7 +19,7 @@ lookup_directories:
         - openldap-dev
 
 bus:
-    host: localhost
+    host: 10.37.0.254
     port: 5672
     username: guest
     password: guest
