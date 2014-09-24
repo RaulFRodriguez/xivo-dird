@@ -35,7 +35,8 @@ aastra_search_answer = '''<AastraIPPhoneInputScreen type="string" editable="yes"
 '''
 
 
-@app.route('/{version}/directories/lookup/<profile>/aastra'.format(version=VERSION))
+@app.route('/{version}/directories/lookup/<profile>/aastra'.format(version=VERSION),
+           endpoint='aastra_lookup')
 def lookup(profile):
     logger.info('profile {} lookup'.format(profile))
     if 'name' not in request.args:
