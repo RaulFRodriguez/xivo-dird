@@ -30,4 +30,5 @@ def load(configured_views):
     for view_name in configured_views:
         logger.info('Loading http view %s', view_name)
         module_name = 'xivo_dird.http_views.%s' % view_name
-        import_module(module_name)
+        module = import_module(module_name)
+        module.load({'http_app': app})

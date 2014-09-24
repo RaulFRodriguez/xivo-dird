@@ -21,7 +21,6 @@ import time
 
 from flask.helpers import make_response
 from xivo_dird.core import result_formatter
-from xivo_dird.http import app
 from xivo_dird.http import VERSION
 from flask import current_app, request
 
@@ -29,7 +28,6 @@ from flask import current_app, request
 logger = logging.getLogger(__name__)
 
 
-@app.route('/{version}/directories/lookup/<profile>/headers'.format(version=VERSION))
 def headers(profile):
     logger.info('profile {} headers'.format(profile))
     dummy = _encode_json(
@@ -39,7 +37,6 @@ def headers(profile):
     return make_response(dummy, 200, None, 'application/json')
 
 
-@app.route('/{version}/directories/lookup/<profile>'.format(version=VERSION))
 def lookup(profile):
     logger.info('profile {} lookup'.format(profile))
     term = request.args['term']
@@ -49,7 +46,6 @@ def lookup(profile):
     return make_response(_encode_json(formatted_result), 200, None, 'application/json')
 
 
-@app.route('/{version}/directories/reverse_lookup'.format(version=VERSION))
 def reverse_lookup():
     logger.info('reverse lookup')
 
@@ -61,6 +57,25 @@ def reverse_lookup():
     result = current_app.backend_plugin_manager.reverse_lookup(request.args['term'])
     formatted_result = result_formatter.format_reverse_lookup(result)
     return make_response(_encode_json(formatted_result), 200, None, 'application/json')
+
+
+def load(args=None):
+    http_app = args['http_app']
+    http_app.add_url_rule(
+        '/{version}/directories/lookup/<profile>/headers'.format(version=VERSION),
+        'default_header',
+        headers,
+    )
+    http_app.add_url_rule(
+        '/{version}/directories/lookup/<profile>'.format(version=VERSION),
+        'default_lookup',
+        lookup,
+    )
+    http_app.add_url_rule(
+        '/{version}/directories/reverse_lookup'.format(version=VERSION),
+        'default_reverse',
+        reverse_lookup,
+    )
 
 
 def _encode_json(data):

@@ -19,7 +19,6 @@ import logging
 
 from flask import current_app, request
 from flask.helpers import make_response
-from xivo_dird.http import app
 from xivo_dird.http import VERSION
 from xivo_dird.core import result_formatter
 
@@ -35,8 +34,6 @@ aastra_search_answer = '''<AastraIPPhoneInputScreen type="string" editable="yes"
 '''
 
 
-@app.route('/{version}/directories/lookup/<profile>/aastra'.format(version=VERSION),
-           endpoint='aastra_lookup')
 def lookup(profile):
     logger.info('profile {} lookup'.format(profile))
     if 'name' not in request.args:
@@ -46,6 +43,15 @@ def lookup(profile):
     result = current_app.backend_plugin_manager.lookup(profile, name, args={})
     formatted_result = result_formatter.format_lookup(result)
     return make_response(_encode_xml(formatted_result), 200, None, 'text/xml')
+
+
+def load(args=None):
+    app = args['http_app']
+    app.add_url_rule(
+        '/{version}/directories/lookup/<profile>/aastra'.format(version=VERSION),
+        'aastra_lookup',
+        lookup,
+    )
 
 
 def _encode_xml(formatted_result):
