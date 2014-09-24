@@ -31,17 +31,11 @@ ReverseLookupResult = namedtuple('ReverseLookupResult', ['result', 'query', 'sou
 LookupResult = namedtuple('LookupResult', ['results', 'query', 'args', 'source'])
 
 
-class PluginManager(object):
-    '''
-    Some assumptions about the PluginManager
-    Plugins are used to query different directory sources
-    Header configuration is a configuration of the PluginManager
-    '''
+class _SourceManager(object):
 
     def __init__(self, config):
-        logger.debug('PluginManager')
         self._config = config
-        self._mgr = enabled.EnabledExtensionManager(
+        mgr = enabled.EnabledExtensionManager(
             namespace='dird.sources',
             check_func=self._plugin_filter,
             invoke_on_load=False,
@@ -49,6 +43,8 @@ class PluginManager(object):
         self._plugin_config = self._build_plugin_config()
         self._sources = []
         self._profile_sources = defaultdict(list)
+        mgr.map(self._load)
+        self._init_profile_map()
 
     def _plugin_filter(self, extension):
         return extension.name in self._config.plugins
@@ -87,20 +83,35 @@ class PluginManager(object):
     def _init_profile_map(self):
         logger.debug('Initializing profile sources')
         for profile in self._config.lookup_directories.__dict__:
-            source_names = self._get_profile_lookup_sources(profile)
+            source_names = getattr(self._config.lookup_directories, profile, [])
             logger.debug('%s should contain %s', profile, source_names)
             for source in self._sources:
                 logger.debug('Checking %s in %s', source.name(), source_names)
                 if source.name() in source_names:
                     self._profile_sources[profile].append(source)
 
-    def _get_profile_lookup_sources(self, profile):
-        return getattr(self._config.lookup_directories, profile, [])
+    def by_profile(self, profile):
+        logger.debug('sources %s', self._profile_sources[profile])
+        return self._profile_sources[profile]
+
+    def reverse_sources(self):
+        return (s for s in self._sources if s.name() in self._config.reverse_directories)
+
+
+class PluginManager(object):
+    '''
+    Some assumptions about the PluginManager
+    Plugins are used to query different directory sources
+    Header configuration is a configuration of the PluginManager
+    '''
+
+    def __init__(self, config):
+        logger.debug('PluginManager')
+        self._config = config
+        self._source_manager = _SourceManager(config)
 
     def start(self):
         self._executor = ThreadPoolExecutor(max_workers=10)
-        self._mgr.map(self._load)
-        self._init_profile_map()
 
     def stop(self):
         self._executor.shutdown()
@@ -113,7 +124,7 @@ class PluginManager(object):
 
     def lookup(self, profile, term, args):
         pending_futures = [self._async_lookup(s, term, args)
-                           for s in self._profile_sources[profile]]
+                           for s in self._source_manager.by_profile(profile)]
         presents, _ = wait(pending_futures, return_when=ALL_COMPLETED)
         return [LookupResult(p.result(), term, args, p.name) for p in presents]
 
@@ -124,8 +135,7 @@ class PluginManager(object):
 
     def reverse_lookup(self, term):
         pending_futures = [self._async_reverse_lookup(s, term)
-                           for s in self._sources
-                           if s.name() in self._config.reverse_directories]
+                           for s in self._source_manager.reverse_sources()]
 
         # Return when the first not None result is found
         presents, _ = wait(pending_futures, return_when=FIRST_COMPLETED)
