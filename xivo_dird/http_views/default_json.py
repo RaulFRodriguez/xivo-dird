@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2014 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,18 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
 import logging
+import json
 import time
 
-from flask import Flask, current_app, request
 from flask.helpers import make_response
 from xivo_dird.core import result_formatter
+from xivo_dird.http import app
+from xivo_dird.http import VERSION
+from flask import current_app, request
+
 
 logger = logging.getLogger(__name__)
-app = Flask(__name__)
-
-VERSION = 0.1
 
 
 @app.route('/{version}/directories/lookup/<profile>/headers'.format(version=VERSION))

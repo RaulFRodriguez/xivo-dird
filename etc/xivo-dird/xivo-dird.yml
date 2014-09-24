@@ -1,4 +1,6 @@
 plugin_config_dir: /etc/xivo/xivo-dird/plugins.d
+http_plugins:
+    - default_json
 
 plugins:
     - dummy
