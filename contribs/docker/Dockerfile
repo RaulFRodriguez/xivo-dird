@@ -26,7 +26,7 @@ RUN apt-get -qq -y install \
 WORKDIR /root
 RUN git clone "git://github.com/xivo-pbx/xivo-dird"
 WORKDIR xivo-dird
-RUN git checkout -t origin/stevedore
+RUN git checkout -t origin/stevedore-2
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
