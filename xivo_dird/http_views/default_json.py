@@ -68,7 +68,7 @@ def load(args=None):
     )
     http_app.add_url_rule(
         '/{version}/directories/lookup/<profile>'.format(version=VERSION),
-        'default_lookup',
+        __name__,
         lookup,
     )
     http_app.add_url_rule(

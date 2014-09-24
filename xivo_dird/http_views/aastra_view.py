@@ -49,7 +49,7 @@ def load(args=None):
     app = args['http_app']
     app.add_url_rule(
         '/{version}/directories/lookup/<profile>/aastra'.format(version=VERSION),
-        'aastra_lookup',
+        __name__,
         lookup,
     )
 
