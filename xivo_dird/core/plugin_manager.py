@@ -22,7 +22,7 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, FIRST_COMPLETED
 from collections import namedtuple
 from collections import defaultdict
-from stevedore import extension
+from stevedore import enabled
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +41,17 @@ class PluginManager(object):
     def __init__(self, config):
         logger.debug('PluginManager')
         self._config = config
-        self._mgr = extension.ExtensionManager(
+        self._mgr = enabled.EnabledExtensionManager(
             namespace='dird.sources',
+            check_func=self._plugin_filter,
             invoke_on_load=False,
         )
         self._plugin_config = self._build_plugin_config()
         self._sources = []
         self._profile_sources = defaultdict(list)
+
+    def _plugin_filter(self, extension):
+        return extension.name in self._config.plugins
 
     def _build_plugin_config(self):
         '''
@@ -65,10 +69,7 @@ class PluginManager(object):
         for path in paths:
             with open(path) as f:
                 config = yaml.load(f)
-                plugin_type = config['type']
-                if plugin_type not in self._config.plugins:
-                    continue
-                configs[plugin_type].append(config)
+                configs[config['type']].append(config)
 
         return configs
 
