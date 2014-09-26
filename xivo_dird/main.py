@@ -28,13 +28,15 @@ from xivo.xivo_logging import setup_logging
 from xivo_dird import http
 from xivo_dird import core
 from xivo_bus.ctl.consumer import BusConsumer
-from xivo_dird.config import config
+from xivo_dird.config import fetch_config
 
 logger = logging.getLogger(__name__)
 wsgi_server = None
 
 
 def main():
+    config = fetch_config()
+
     setup_logging(config._LOG_FILENAME, config.foreground, config.debug)
     if config.user:
         change_user(config.user)
@@ -42,17 +44,17 @@ def main():
     bus_consumer = BusConsumer(config.bus_config_obj)
     bus_consumer.connect()
     bus_consumer.channel.exchange_declare(config.bus.exchange_name)
-    bus_consumer.add_binding(ask_for_reload,
+    bus_consumer.add_binding(lambda body: ask_for_reload(config, body),
                              config.bus.queue_name,
                              config.bus.exchange_name,
                              'config.directory.sources.*')
     thread.start_new_thread(bus_consumer.run, ())
 
     with pidfile_context(config._PID_FILENAME, config.foreground):
-        _run()
+        _run(config)
 
 
-def ask_for_reload(body):
+def ask_for_reload(config, body):
     if body['name'] == 'directory_source_edited':
         logger.info('Reloading the configuration...')
         http.app.backend_plugin_manager.stop()
@@ -72,7 +74,7 @@ def _handle_sigterm(signum, frame):
     raise SystemExit()
 
 
-def _run():
+def _run(config):
     _init_signal()
 
     plugin_manager = http.app.backend_plugin_manager = core.PluginManager(config)

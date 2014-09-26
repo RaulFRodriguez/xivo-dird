@@ -83,6 +83,9 @@ def _get_config_raw(config_path):
     with open(path) as fobj:
         return yaml.load(fobj)
 
-args_parsed = configure()
-config = ConfigXivoDird(_get_config_raw(args_parsed.config_path))
-config._update_config(vars(args_parsed))
+
+def fetch_config():
+    args_parsed = configure()
+    config = ConfigXivoDird(_get_config_raw(args_parsed.config_path))
+    config._update_config(vars(args_parsed))
+    return config
