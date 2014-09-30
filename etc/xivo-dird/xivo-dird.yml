@@ -19,7 +19,7 @@ lookup_directories:
         - openldap-dev
 
 bus:
-    host: 10.37.0.254
+    host: localhost
     port: 5672
     username: guest
     password: guest
