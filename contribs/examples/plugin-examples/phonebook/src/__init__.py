@@ -14,32 +14,3 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-import logging
-
-from flask import Flask
-from stevedore import enabled
-from stevedore import extension
-
-logger = logging.getLogger(__name__)
-app = Flask(__name__)
-
-VERSION = 0.1
-
-
-def load(configured_views):
-    def plugin_filter(extension):
-        return extension.name in configured_views
-
-    enabled.EnabledExtensionManager(
-        namespace='dird.views',
-        check_func=plugin_filter,
-        invoke_on_load=True,
-        invoke_args=({'http_app': app},),
-    )
-
-    extension.ExtensionManager(
-        namespace='dird.services',
-        invoke_on_load=True,
-        invoke_args=({'http_app': app},),
-    )
