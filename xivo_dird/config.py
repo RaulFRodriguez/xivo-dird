@@ -18,6 +18,7 @@
 import argparse
 import os
 import yaml
+import subprocess
 
 from xivo_bus.ctl.config import BusConfig
 
@@ -81,7 +82,24 @@ def configure():
 def _get_config_raw(config_path):
     path = os.path.join(config_path, _CONF_FILENAME)
     with open(path) as fobj:
-        return yaml.load(fobj)
+        config = yaml.load(fobj)
+        if not config:
+            return {}
+
+    config.update(_load_from_executable(config.pop('exec', None)))
+
+    return config
+
+
+def _load_from_executable(executable):
+    if not executable:
+        return {}
+
+    raw = subprocess.check_output(executable.split(' '))
+    if not raw:
+        return {}
+
+    return yaml.load(raw)
 
 
 def fetch_config():
