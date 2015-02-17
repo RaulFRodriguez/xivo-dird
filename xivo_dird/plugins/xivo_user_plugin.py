@@ -28,16 +28,15 @@ class XivoUserPlugin(BaseSourcePlugin):
 
     def __init__(self, ConfdClientClass=Client):
         self._ConfdClientClass = ConfdClientClass
-        self._client = None
+        self._confd_config = None
         self._uuid = None
 
     def load(self, args):
         self._searched_columns = args['config'].get(self.SEARCHED_COLUMNS, [])
         self.name = args['config']['name']
 
-        confd_config = args['config']['confd_config']
-        logger.debug('confd config %s', confd_config)
-        self._client = self._ConfdClientClass(**confd_config)
+        self._confd_config = args['config']['confd_config']
+        logger.debug('confd config %s', self._confd_config)
 
         self._SourceResult = make_result_class(
             self.name, ['id'],
@@ -91,15 +90,18 @@ class XivoUserPlugin(BaseSourcePlugin):
         if self._uuid:
             return self._uuid
 
-        infos = self._client.infos()
+        infos = self._build_client().infos()
         self._uuid = infos['uuid']
         return self._uuid
 
+    def _build_client(self):
+        return self._ConfdClientClass(**self._confd_config)
+
     def _fetch_users(self, term=None):
         if term:
-            users = self._client.users.list(view='directory', search=term)
+            users = self._build_client().users.list(view='directory', search=term)
         else:
-            users = self._client.users.list(view='directory')
+            users = self._build_client().users.list(view='directory')
         return (user for user in users['items'])
 
     def _source_result_from_entry(self, entry, uuid):

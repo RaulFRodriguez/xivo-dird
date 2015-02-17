@@ -117,7 +117,7 @@ class TestXivoUserBackendSearch(_BaseTest):
         super(TestXivoUserBackendSearch, self).setUp()
         response = {'items': [CONFD_USER_1, CONFD_USER_2]}
         self._confd_client.users.list.return_value = response
-        self._source._client = self._confd_client
+        self._source._confd_config = CONFD_CONFIG
         self._source._SourceResult = SourceResult
         self._source._uuid = UUID
 
@@ -189,13 +189,12 @@ class TestXivoUserBackendInitialisation(_BaseTest):
         assert_that(self._source.name,
                     equal_to(DEFAULT_ARGS['config']['name']))
 
-    def test_load_client(self):
+    def test_load_confd_config(self):
         self._source.load(DEFAULT_ARGS)
 
         confd_config = DEFAULT_ARGS['config']['confd_config']
-        self._FakedConfdClient.assert_called_once_with(**confd_config)
 
-        assert_that(self._source._client, self._confd_client)
+        assert_that(self._source._confd_config, confd_config)
 
     def test_make_source_result_from_entry(self):
         entry = CONFD_USER_2
