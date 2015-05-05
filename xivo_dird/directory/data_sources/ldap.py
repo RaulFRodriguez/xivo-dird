@@ -74,7 +74,7 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
         return ldap_search_filter.encode(self.ldap_encoding)
 
     def _compute_ldap_search_filter(self, search_pattern, fields):
-        ldap_filter = [u'(%s=*%s*)' % (field, search_pattern) for field in fields]
+        ldap_filter = [u'(%s=%s)' % (field, search_pattern) for field in fields]
         str_ldap_filter = u'(|%s)' % u''.join(ldap_filter)
         return str_ldap_filter
 
